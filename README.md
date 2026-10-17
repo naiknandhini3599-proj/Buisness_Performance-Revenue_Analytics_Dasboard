@@ -1,0 +1,1 @@
+A responsive business analytics and CRM web application for tracking leads, quotations, deals, revenue, orders, payments, and employee performance using interactive dashboards and realistic dummy data.
