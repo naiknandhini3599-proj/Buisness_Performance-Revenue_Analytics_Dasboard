@@ -119,11 +119,12 @@ export const ThreeDAnalyticsScene: React.FC = () => {
 
     // 7. Animation Loop
     let animationFrameId: number;
-    let clock = new THREE.Clock();
+    const timer = new THREE.Timer();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
+      timer.update();
+      const elapsedTime = timer.getElapsed();
 
       if (!prefersReducedMotion) {
         // Smooth camera lerp
@@ -171,6 +172,7 @@ export const ThreeDAnalyticsScene: React.FC = () => {
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      timer.dispose();
       renderer.dispose();
       particleGeometry.dispose();
       particleMaterial.dispose();
