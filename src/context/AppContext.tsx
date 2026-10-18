@@ -38,6 +38,8 @@ import {
   getSalesTeamActivity,
   getOperationsTeamActivity,
   getOrderProgressData,
+  getPaymentMethodBreakdown,
+  getInvoiceStatusBreakdown,
   ComparisonKpis,
   LeadSourceStat,
   DailyTrendPoint,
@@ -49,6 +51,8 @@ import {
   SalesMemberStat,
   OpsMemberStat,
   OrderProgressGroup,
+  PaymentMethodStat,
+  InvoiceStatusStat,
 } from '../utils/calculations';
 
 interface AppContextType {
@@ -113,6 +117,8 @@ interface AppContextType {
   salesTeamActivity: SalesMemberStat[];
   opsTeamActivity: OpsMemberStat[];
   orderProgress: OrderProgressGroup[];
+  paymentMethods: PaymentMethodStat[];
+  invoiceStatuses: InvoiceStatusStat[];
 
   // Modal / Drill-down Control
   selectedLeadId: string | null;
@@ -713,6 +719,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return getOrderProgressData(currentFiltered.filteredOrders);
   }, [currentFiltered.filteredOrders]);
 
+  const paymentMethods = useMemo(() => {
+    return getPaymentMethodBreakdown(currentFiltered.filteredPayments);
+  }, [currentFiltered.filteredPayments]);
+
+  const invoiceStatuses = useMemo(() => {
+    return getInvoiceStatusBreakdown(currentFiltered.filteredInvoices);
+  }, [currentFiltered.filteredInvoices]);
+
   return (
     <AppContext.Provider
       value={{
@@ -758,6 +772,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         salesTeamActivity,
         opsTeamActivity,
         orderProgress,
+        paymentMethods,
+        invoiceStatuses,
         selectedLeadId,
         setSelectedLeadId,
         selectedQuotationId,

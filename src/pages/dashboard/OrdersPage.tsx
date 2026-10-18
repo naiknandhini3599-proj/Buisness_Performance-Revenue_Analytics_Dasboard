@@ -9,6 +9,8 @@ import {
   Search,
   Filter,
   CheckCircle,
+  FileText,
+  Receipt,
 } from 'lucide-react';
 import { formatINR, formatDateFull } from '../../utils/formatters';
 
@@ -19,17 +21,20 @@ export const OrdersPage: React.FC = () => {
     updateOrderStatus,
     setSelectedOrderId,
     setSelectedPaymentId,
+    setSelectedInvoiceId,
     setSelectedDealId,
     setIsRecordPaymentOpen,
     advanceOrderStage,
+    filters,
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'payments'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'invoices'>('orders');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   const orders = currentFiltered.filteredOrders;
   const payments = currentFiltered.filteredPayments;
+  const invoices = currentFiltered.filteredInvoices;
 
   const completedOrders = orders.filter((o) => o.status === 'Completed').length;
   const inProgressOrders = orders.filter((o) => o.status === 'In Progress').length;
@@ -144,6 +149,17 @@ export const OrdersPage: React.FC = () => {
         >
           <CreditCard className="h-4 w-4" />
           <span>Payment History & Receipts ({payments.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('invoices')}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition-colors ${
+            activeTab === 'invoices'
+              ? 'border-[#2563EB] text-[#2563EB]'
+              : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
+          }`}
+        >
+          <Receipt className="h-4 w-4" />
+          <span>Tax Invoices ({invoices.length})</span>
         </button>
       </div>
 
@@ -318,6 +334,98 @@ export const OrdersPage: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 3: Tax Invoices Table */}
+      {activeTab === 'invoices' && (
+        <div className="rounded-xl border border-[#D5E2F1] bg-white shadow-xs overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] p-4 bg-[#F8FAFC]">
+            <div className="relative w-64">
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-[#94A3B8]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search invoices by ID, client..."
+                className="w-full rounded-lg border border-[#CBD5E1] bg-white pl-8 pr-3 py-1.5 text-xs text-[#0F172A] focus:border-[#2563EB] focus:outline-hidden"
+              />
+            </div>
+
+            <span className="text-xs font-medium text-[#64748B]">
+              Showing {invoices.length} Tax Invoices
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                <tr>
+                  <th className="px-4 py-3">Invoice ID</th>
+                  <th className="px-4 py-3">Customer Entity</th>
+                  <th className="px-4 py-3 text-right">Invoice Amount</th>
+                  <th className="px-4 py-3 text-right">Paid</th>
+                  <th className="px-4 py-3 text-right">Balance Due</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                  <th className="px-4 py-3">Issue Date</th>
+                  <th className="px-4 py-3">Controller</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F1F5F9]">
+                {invoices
+                  .filter((inv) => {
+                    if (!search.trim()) return true;
+                    const q = search.toLowerCase();
+                    return (
+                      inv.id.toLowerCase().includes(q) ||
+                      inv.customerName.toLowerCase().includes(q)
+                    );
+                  })
+                  .map((inv) => (
+                    <tr
+                      key={inv.id}
+                      onClick={() => setSelectedInvoiceId(inv.id)}
+                      className="cursor-pointer hover:bg-[#F8FAFC] transition-colors"
+                    >
+                      <td className="px-4 py-3 font-bold text-blue-600">
+                        {inv.id}
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-[#0F2042]">
+                        {inv.customerName}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-[#0F2042]">
+                        {formatINR(inv.invoiceAmount)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-emerald-600">
+                        {formatINR(inv.paidAmount)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-rose-600">
+                        {formatINR(inv.balanceAmount)}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span
+                          className={`rounded px-2 py-0.5 text-[10px] font-bold ${
+                            inv.status === 'Paid'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : inv.status === 'Partially Paid'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}
+                        >
+                          {inv.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[#64748B]">
+                        {formatDateFull(inv.issueDate)}
+                      </td>
+                      <td className="px-4 py-3 text-[#64748B]">
+                        {inv.assignedFinanceName || 'Rajesh Verma'}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

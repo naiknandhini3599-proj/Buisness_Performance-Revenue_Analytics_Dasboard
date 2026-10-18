@@ -194,7 +194,7 @@ export const DashboardLayout: React.FC = () => {
   const activePayment = payments.find((p) => p.id === selectedPaymentId) || null;
 
   return (
-    <div className="flex min-h-screen bg-[#F1F5FB] text-[#172554] antialiased">
+    <div className="flex min-h-screen bg-[#EDF3FA] text-[#0F2042] antialiased">
       {/* 1. Left Sidebar Navigation */}
       {/* Mobile Backdrop */}
       {sidebarOpen && (
@@ -308,7 +308,7 @@ export const DashboardLayout: React.FC = () => {
       {/* 2. Main Page Layout Container */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {/* Top Header Controls */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#DCE6F5] bg-white px-4 sm:px-6 shadow-xs">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#D5E2F1] bg-white/95 backdrop-blur-md px-4 sm:px-6 shadow-2xs">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -395,53 +395,97 @@ export const DashboardLayout: React.FC = () => {
               )}
             </div>
 
-            {/* Global Employee / User Selector */}
+            {/* Department Filter */}
             <div className="relative">
               <select
-                value={filters.userId}
-                onChange={(e) => updateFilter({ userId: e.target.value })}
-                className="appearance-none rounded-lg border border-[#DCE6F5] bg-white pl-3 pr-8 py-1.5 text-xs font-semibold text-[#172554] hover:bg-[#F8FAFC] shadow-xs focus:border-[#2563EB] focus:outline-hidden cursor-pointer"
-              >
-                <option value="all">All Employees</option>
-                <optgroup label="Sales & Consulting">
-                  <option value="u-6">Aazam Afroz</option>
-                  <option value="u-1">Nancy Singh</option>
-                  <option value="u-2">Sneha Choudhary</option>
-                  <option value="u-3">Tannu Kumari</option>
-                  <option value="u-8">Vikramaditya Rao</option>
-                </optgroup>
-                <optgroup label="Operations & Fulfillment">
-                  <option value="u-4">Gaurav Pant</option>
-                  <option value="u-5">Srishti Upadhyay</option>
-                </optgroup>
-                <optgroup label="Finance & Billing">
-                  <option value="u-7">Rajesh Verma</option>
-                </optgroup>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-3 w-3 text-[#64748B]" />
-            </div>
-
-            {/* Department Filter */}
-            <div className="relative hidden md:block">
-              <select
                 value={filters.department}
-                onChange={(e) => updateFilter({ department: e.target.value })}
-                className="appearance-none rounded-lg border border-[#DCE6F5] bg-white pl-3 pr-8 py-1.5 text-xs font-semibold text-[#172554] hover:bg-[#F8FAFC] shadow-xs focus:border-[#2563EB] focus:outline-hidden cursor-pointer"
+                onChange={(e) => {
+                  const newDept = e.target.value;
+                  const curUser = users.find((u) => u.id === filters.userId);
+                  if (curUser && newDept !== 'all' && curUser.department !== newDept) {
+                    updateFilter({ department: newDept, userId: 'all' });
+                  } else {
+                    updateFilter({ department: newDept });
+                  }
+                }}
+                className="appearance-none rounded-lg border border-[#CBDFF5] bg-white pl-2.5 sm:pl-3 pr-7 sm:pr-8 py-1.5 text-xs font-semibold text-[#0F2042] hover:bg-[#F8FAFC] hover:border-[#2563EB] shadow-2xs focus:border-[#2563EB] focus:outline-hidden cursor-pointer"
               >
                 <option value="all">All Departments</option>
                 <option value="Sales">Sales</option>
                 <option value="Operations">Operations</option>
                 <option value="Finance">Finance</option>
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-3 w-3 text-[#64748B]" />
+              <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-3 w-3 text-[#64748B]" />
             </div>
 
-            {/* Reset Filters Icon if active */}
+            {/* Global Employee / User Selector */}
+            <div className="relative">
+              <select
+                value={filters.userId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'all') {
+                    updateFilter({ userId: 'all' });
+                  } else {
+                    const selectedU = users.find((u) => u.id === val);
+                    if (selectedU) {
+                      updateFilter({ userId: val, department: selectedU.department });
+                    } else {
+                      updateFilter({ userId: val });
+                    }
+                  }
+                }}
+                className="appearance-none rounded-lg border border-[#CBDFF5] bg-white pl-2.5 sm:pl-3 pr-7 sm:pr-8 py-1.5 text-xs font-semibold text-[#0F2042] hover:bg-[#F8FAFC] hover:border-[#2563EB] shadow-2xs focus:border-[#2563EB] focus:outline-hidden cursor-pointer max-w-[130px] sm:max-w-[180px] truncate"
+              >
+                {filters.department === 'Sales' ? (
+                  <>
+                    <option value="all">All Sales Reps</option>
+                    <option value="u-6">Aazam Afroz</option>
+                    <option value="u-1">Nancy Singh</option>
+                    <option value="u-2">Sneha Choudhary</option>
+                    <option value="u-3">Tannu Kumari</option>
+                    <option value="u-8">Vikramaditya Rao</option>
+                  </>
+                ) : filters.department === 'Operations' ? (
+                  <>
+                    <option value="all">All Ops Specialists</option>
+                    <option value="u-4">Gaurav Pant</option>
+                    <option value="u-5">Srishti Upadhyay</option>
+                  </>
+                ) : filters.department === 'Finance' ? (
+                  <>
+                    <option value="all">All Finance Staff</option>
+                    <option value="u-7">Rajesh Verma</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="all">All Employees</option>
+                    <optgroup label="Sales & Consulting">
+                      <option value="u-6">Aazam Afroz</option>
+                      <option value="u-1">Nancy Singh</option>
+                      <option value="u-2">Sneha Choudhary</option>
+                      <option value="u-3">Tannu Kumari</option>
+                      <option value="u-8">Vikramaditya Rao</option>
+                    </optgroup>
+                    <optgroup label="Operations & Fulfillment">
+                      <option value="u-4">Gaurav Pant</option>
+                      <option value="u-5">Srishti Upadhyay</option>
+                    </optgroup>
+                    <optgroup label="Finance & Billing">
+                      <option value="u-7">Rajesh Verma</option>
+                    </optgroup>
+                  </>
+                )}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-3 w-3 text-[#64748B]" />
+            </div>
+
+            {/* Reset Filters Button if active */}
             {(filters.userId !== 'all' || filters.department !== 'all') && (
               <button
                 onClick={resetFilters}
                 title="Reset filters to All"
-                className="rounded-lg bg-slate-100 p-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200"
+                className="rounded-lg bg-slate-100 hover:bg-slate-200 px-2 py-1.5 text-xs font-semibold text-slate-700 cursor-pointer transition-colors"
               >
                 Reset
               </button>
@@ -511,7 +555,7 @@ export const DashboardLayout: React.FC = () => {
         </header>
 
         {/* Dynamic Nested Page Content */}
-        <main className="flex-1 overflow-y-auto bg-[#F1F5FB] p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-[#EDF3FA] bg-[radial-gradient(ellipse_100%_80%_at_50%_-10%,rgba(219,234,254,0.35),rgba(237,243,250,1))] p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

@@ -168,6 +168,7 @@ export interface FilterState {
 }
 
 export interface PeriodKpiData {
+  // Sales & Lead metrics
   newLeads: number;
   qualifiedLeads: number;
   convertedLeads: number;
@@ -175,11 +176,28 @@ export interface PeriodKpiData {
   conversionRate: number; // percentage
   quotationsCreated: number;
   dealsCreated: number;
-  invoicesGenerated: number;
   totalDealValue: number;
+
+  // Operational fulfillment metrics
+  totalOrders: number;
+  ordersInProgress: number;
+  ordersCompleted: number;
+  ordersPending: number;
+  orderCompletionRate: number; // percentage
+  totalOrderValue: number;
+  stagesCompletedTotal: number;
+  stagesTotal: number;
+  orderProgressRate: number; // percentage
+
+  // Financial & billing metrics
+  invoicesGenerated: number;
   totalInvoiced: number;
   totalCollected: number;
   outstandingRevenue: number;
+  collectionRate: number; // percentage
+  paidInvoicesCount: number;
+  unpaidInvoicesCount: number;
+  paymentsCount: number;
 }
 
 export interface AuthUser {

@@ -202,9 +202,9 @@ export const LeadsPage: React.FC = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-3 text-[10px] text-[#64748B]">
             {leadSources.map((s) => (
-              <span key={s.name} className="flex items-center gap-1">
+              <span key={s.source} className="flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: s.color }} />
-                <span>{s.name} ({s.count})</span>
+                <span>{s.source} ({s.count})</span>
               </span>
             ))}
           </div>

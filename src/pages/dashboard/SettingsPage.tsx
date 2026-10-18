@@ -114,7 +114,7 @@ export const SettingsPage: React.FC = () => {
     setSelectedUser('u-6');
     setCurrency('INR');
     setDefaultDatePreset('oct2026');
-    setDefaultEmployeeFilter('all');
+    setDefaultEmployee('all');
     setResetSuccess(true);
     setSavedSuccess(false);
     setTimeout(() => setResetSuccess(false), 5000);

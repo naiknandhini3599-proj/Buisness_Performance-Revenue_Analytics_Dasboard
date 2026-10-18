@@ -16,7 +16,10 @@ import { formatDateFull } from '../../utils/formatters';
 
 export const RecentActivityPage: React.FC = () => {
   const {
+    currentFiltered,
     activities,
+    filters,
+    updateFilter,
     setSelectedLeadId,
     setSelectedQuotationId,
     setSelectedDealId,
@@ -24,11 +27,14 @@ export const RecentActivityPage: React.FC = () => {
     setSelectedPaymentId,
   } = useApp();
 
+  const [useDateFilter, setUseDateFilter] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [employeeFilter, setEmployeeFilter] = useState('ALL');
 
-  const filtered = activities.filter((act) => {
+  const sourceActivities = useDateFilter ? currentFiltered.filteredActivities : activities;
+
+  const filtered = sourceActivities.filter((act) => {
     if (typeFilter !== 'ALL' && act.recordType !== typeFilter) return false;
     if (employeeFilter !== 'ALL' && act.employeeName !== employeeFilter) return false;
     if (!search.trim()) return true;

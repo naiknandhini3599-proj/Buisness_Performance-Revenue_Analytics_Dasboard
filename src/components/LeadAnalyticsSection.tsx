@@ -312,7 +312,7 @@ export const LeadAnalyticsSection: React.FC<LeadAnalyticsSectionProps> = ({
                   innerRadius={36}
                   outerRadius={58}
                   paddingAngle={3}
-                  onClick={(entry) => onDrillDown('source', entry.source)}
+                  onClick={(entry: any) => onDrillDown('source', entry?.source || entry?.name)}
                   className="cursor-pointer"
                 >
                   {leadSources.map((entry, idx) => (

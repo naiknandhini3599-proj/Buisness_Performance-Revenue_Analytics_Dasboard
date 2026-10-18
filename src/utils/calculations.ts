@@ -22,7 +22,18 @@ export interface ComparisonKpis {
   conversionRateDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
   quotationsDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
   dealsDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  totalDealValueDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
   invoicesDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  totalOrdersDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  ordersInProgressDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  ordersCompletedDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  orderCompletionRateDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  totalOrderValueDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  orderProgressRateDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  totalInvoicedDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  totalCollectedDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  outstandingRevenueDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
+  collectionRateDiff: { valueStr: string; isPositive: boolean; isZero: boolean };
   periodDaysLabel: string;
 }
 
@@ -112,8 +123,7 @@ export function filterRecords(
     };
   }
 
-  // Pre-calculate relationships for connected employee attribution:
-  // For Operations specialists:
+  // Pre-calculate user-level lookup sets
   const userOpsOrderIds = new Set(
     orders.filter((o) => o.assignedOpsId === userId).map((o) => o.id)
   );
@@ -123,53 +133,78 @@ export function filterRecords(
   const userOpsOrderLeadIds = new Set(
     orders.filter((o) => o.assignedOpsId === userId).map((o) => o.leadId)
   );
-  const userOpsDealQuoteIds = new Set(
-    deals.filter((d) => userOpsOrderDealIds.has(d.id)).flatMap((d) => d.quotationIds || [])
-  );
 
-  // For Finance controller:
-  const userFinanceInvoiceIds = new Set(
-    invoices.filter((i) => i.assignedFinanceId === userId).map((i) => i.id)
-  );
   const userFinanceDealIds = new Set(
     invoices.filter((i) => i.assignedFinanceId === userId).map((i) => i.dealId)
   );
   const userFinanceOrderIds = new Set(
     invoices.filter((i) => i.assignedFinanceId === userId && i.orderId).map((i) => i.orderId!)
   );
-  const userFinanceLeadIds = new Set(
-    deals.filter((d) => userFinanceDealIds.has(d.id)).map((d) => d.leadId)
+
+  // Department-level user ID groups
+  const opsUserIds = new Set(USERS.filter((u) => u.department === 'Operations').map((u) => u.id));
+  const salesUserIds = new Set(USERS.filter((u) => u.department === 'Sales').map((u) => u.id));
+  const financeUserIds = new Set(USERS.filter((u) => u.department === 'Finance').map((u) => u.id));
+
+  // Operational relationship IDs
+  const opsOrderIds = new Set(
+    orders
+      .filter((o) => (userId !== 'all' ? o.assignedOpsId === userId : opsUserIds.has(o.assignedOpsId)))
+      .map((o) => o.id)
   );
-  const userFinanceDealQuoteIds = new Set(
-    deals.filter((d) => userFinanceDealIds.has(d.id)).flatMap((d) => d.quotationIds || [])
+  const opsDealIds = new Set(
+    orders
+      .filter((o) => (userId !== 'all' ? o.assignedOpsId === userId : opsUserIds.has(o.assignedOpsId)))
+      .map((o) => o.dealId)
+  );
+  const opsLeadIds = new Set(
+    orders
+      .filter((o) => (userId !== 'all' ? o.assignedOpsId === userId : opsUserIds.has(o.assignedOpsId)))
+      .map((o) => o.leadId)
+  );
+
+  // Finance relationship IDs
+  const finDealIds = new Set(
+    invoices
+      .filter((i) =>
+        userId !== 'all' ? i.assignedFinanceId === userId : financeUserIds.has(i.assignedFinanceId || '')
+      )
+      .map((i) => i.dealId)
+  );
+  const finOrderIds = new Set(
+    invoices
+      .filter(
+        (i) =>
+          (userId !== 'all'
+            ? i.assignedFinanceId === userId
+            : financeUserIds.has(i.assignedFinanceId || '')) && i.orderId
+      )
+      .map((i) => i.orderId!)
+  );
+  const finLeadIds = new Set(
+    invoices
+      .filter((i) =>
+        userId !== 'all' ? i.assignedFinanceId === userId : financeUserIds.has(i.assignedFinanceId || '')
+      )
+      .map((i) => i.leadId)
   );
 
   // Filter Orders
   const filteredOrders = dateOrders.filter((o) => {
     if (userId !== 'all') {
-      if (targetUser?.department === 'Operations') {
-        return o.assignedOpsId === userId;
-      }
-      if (targetUser?.department === 'Sales') {
-        return o.assignedSalesId === userId;
-      }
-      if (targetUser?.department === 'Finance') {
-        return userFinanceOrderIds.has(o.id) || userFinanceDealIds.has(o.dealId);
-      }
+      if (targetUser?.department === 'Operations') return o.assignedOpsId === userId;
+      if (targetUser?.department === 'Sales') return o.assignedSalesId === userId;
+      if (targetUser?.department === 'Finance') return userFinanceOrderIds.has(o.id);
       return o.assignedOpsId === userId || o.assignedSalesId === userId;
     }
-    if (department !== 'all') {
-      if (department === 'Operations') {
-        const ops = USERS.find((u) => u.id === o.assignedOpsId);
-        return ops?.department === 'Operations';
-      }
-      if (department === 'Sales') {
-        const rep = USERS.find((u) => u.id === o.assignedSalesId);
-        return rep?.department === 'Sales';
-      }
-      if (department === 'Finance') {
-        return true;
-      }
+    if (department === 'Operations') {
+      return opsUserIds.has(o.assignedOpsId);
+    }
+    if (department === 'Sales') {
+      return salesUserIds.has(o.assignedSalesId);
+    }
+    if (department === 'Finance') {
+      return finOrderIds.has(o.id);
     }
     return true;
   });
@@ -177,34 +212,19 @@ export function filterRecords(
   // Filter Deals
   const filteredDeals = dateDeals.filter((d) => {
     if (userId !== 'all') {
-      if (targetUser?.department === 'Sales') {
-        return d.assignedSalesId === userId;
-      }
-      if (targetUser?.department === 'Operations') {
-        return userOpsOrderDealIds.has(d.id) || d.assignedSalesId === userId;
-      }
-      if (targetUser?.department === 'Finance') {
-        return userFinanceDealIds.has(d.id);
-      }
+      if (targetUser?.department === 'Sales') return d.assignedSalesId === userId;
+      if (targetUser?.department === 'Operations') return userOpsOrderDealIds.has(d.id);
+      if (targetUser?.department === 'Finance') return userFinanceDealIds.has(d.id);
       return d.assignedSalesId === userId;
     }
-    if (department !== 'all') {
-      if (department === 'Sales') {
-        const rep = USERS.find((u) => u.id === d.assignedSalesId);
-        return rep?.department === 'Sales';
-      }
-      if (department === 'Operations') {
-        const hasOpsOrder = orders.some(
-          (o) => o.dealId === d.id && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'
-        );
-        return hasOpsOrder;
-      }
-      if (department === 'Finance') {
-        const hasFinInv = invoices.some(
-          (i) => i.dealId === d.id && USERS.find((u) => u.id === i.assignedFinanceId)?.department === 'Finance'
-        );
-        return hasFinInv;
-      }
+    if (department === 'Sales') {
+      return salesUserIds.has(d.assignedSalesId);
+    }
+    if (department === 'Operations') {
+      return opsDealIds.has(d.id);
+    }
+    if (department === 'Finance') {
+      return finDealIds.has(d.id);
     }
     return true;
   });
@@ -212,32 +232,27 @@ export function filterRecords(
   // Filter Quotations
   const filteredQuotations = dateQuotations.filter((q) => {
     if (userId !== 'all') {
-      if (targetUser?.department === 'Sales') {
-        return q.assignedSalesId === userId;
-      }
+      if (targetUser?.department === 'Sales') return q.assignedSalesId === userId;
       if (targetUser?.department === 'Operations') {
-        return userOpsDealQuoteIds.has(q.id) || q.assignedSalesId === userId;
+        const linkedDeal = deals.find((d) => d.quotationIds?.includes(q.id) || d.id === q.dealId);
+        return linkedDeal ? userOpsOrderDealIds.has(linkedDeal.id) : false;
       }
       if (targetUser?.department === 'Finance') {
-        return userFinanceDealQuoteIds.has(q.id);
+        const linkedDeal = deals.find((d) => d.quotationIds?.includes(q.id) || d.id === q.dealId);
+        return linkedDeal ? userFinanceDealIds.has(linkedDeal.id) : false;
       }
       return q.assignedSalesId === userId;
     }
-    if (department !== 'all') {
-      if (department === 'Sales') {
-        const rep = USERS.find((u) => u.id === q.assignedSalesId);
-        return rep?.department === 'Sales';
-      }
-      if (department === 'Operations') {
-        return orders.some(
-          (o) => o.dealId === q.dealId && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'
-        );
-      }
-      if (department === 'Finance') {
-        return invoices.some(
-          (i) => i.dealId === q.dealId && USERS.find((u) => u.id === i.assignedFinanceId)?.department === 'Finance'
-        );
-      }
+    if (department === 'Sales') {
+      return salesUserIds.has(q.assignedSalesId);
+    }
+    if (department === 'Operations') {
+      const linkedDeal = deals.find((d) => d.quotationIds?.includes(q.id) || d.id === q.dealId);
+      return linkedDeal ? opsDealIds.has(linkedDeal.id) : false;
+    }
+    if (department === 'Finance') {
+      const linkedDeal = deals.find((d) => d.quotationIds?.includes(q.id) || d.id === q.dealId);
+      return linkedDeal ? finDealIds.has(linkedDeal.id) : false;
     }
     return true;
   });
@@ -245,32 +260,19 @@ export function filterRecords(
   // Filter Leads
   const filteredLeads = dateLeads.filter((l) => {
     if (userId !== 'all') {
-      if (targetUser?.department === 'Sales') {
-        return l.assignedSalesId === userId;
-      }
-      if (targetUser?.department === 'Operations') {
-        return userOpsOrderLeadIds.has(l.id) || l.assignedSalesId === userId;
-      }
-      if (targetUser?.department === 'Finance') {
-        return userFinanceLeadIds.has(l.id);
-      }
+      if (targetUser?.department === 'Sales') return l.assignedSalesId === userId;
+      if (targetUser?.department === 'Operations') return userOpsOrderLeadIds.has(l.id);
+      if (targetUser?.department === 'Finance') return finLeadIds.has(l.id);
       return l.assignedSalesId === userId;
     }
-    if (department !== 'all') {
-      if (department === 'Sales') {
-        const rep = USERS.find((u) => u.id === l.assignedSalesId);
-        return rep?.department === 'Sales';
-      }
-      if (department === 'Operations') {
-        return orders.some(
-          (o) => o.leadId === l.id && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'
-        );
-      }
-      if (department === 'Finance') {
-        return invoices.some(
-          (i) => i.leadId === l.id && USERS.find((u) => u.id === i.assignedFinanceId)?.department === 'Finance'
-        );
-      }
+    if (department === 'Sales') {
+      return salesUserIds.has(l.assignedSalesId);
+    }
+    if (department === 'Operations') {
+      return opsLeadIds.has(l.id);
+    }
+    if (department === 'Finance') {
+      return finLeadIds.has(l.id);
     }
     return true;
   });
@@ -278,34 +280,21 @@ export function filterRecords(
   // Filter Invoices
   const filteredInvoices = dateInvoices.filter((i) => {
     if (userId !== 'all') {
-      if (targetUser?.department === 'Sales') {
-        return i.assignedSalesId === userId;
-      }
+      if (targetUser?.department === 'Finance') return i.assignedFinanceId === userId;
+      if (targetUser?.department === 'Sales') return i.assignedSalesId === userId;
       if (targetUser?.department === 'Operations') {
-        return (
-          i.assignedOpsId === userId ||
-          (i.orderId && userOpsOrderIds.has(i.orderId)) ||
-          userOpsOrderDealIds.has(i.dealId)
-        );
+        return (i.orderId && userOpsOrderIds.has(i.orderId)) || userOpsOrderDealIds.has(i.dealId);
       }
-      if (targetUser?.department === 'Finance') {
-        return i.assignedFinanceId === userId;
-      }
-      return i.assignedSalesId === userId;
+      return i.assignedSalesId === userId || i.assignedFinanceId === userId;
     }
-    if (department !== 'all') {
-      if (department === 'Sales') {
-        const rep = USERS.find((u) => u.id === i.assignedSalesId);
-        return rep?.department === 'Sales';
-      }
-      if (department === 'Operations') {
-        const ops = USERS.find((u) => u.id === i.assignedOpsId);
-        return ops?.department === 'Operations' || (i.orderId && orders.some((o) => o.id === i.orderId && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'));
-      }
-      if (department === 'Finance') {
-        const fin = USERS.find((u) => u.id === i.assignedFinanceId);
-        return fin?.department === 'Finance';
-      }
+    if (department === 'Finance') {
+      return financeUserIds.has(i.assignedFinanceId || '');
+    }
+    if (department === 'Sales') {
+      return salesUserIds.has(i.assignedSalesId);
+    }
+    if (department === 'Operations') {
+      return (i.orderId && opsOrderIds.has(i.orderId)) || opsDealIds.has(i.dealId);
     }
     return true;
   });
@@ -313,34 +302,21 @@ export function filterRecords(
   // Filter Payments
   const filteredPayments = datePayments.filter((p) => {
     if (userId !== 'all') {
-      if (targetUser?.department === 'Sales') {
-        return p.assignedSalesId === userId;
-      }
+      if (targetUser?.department === 'Finance') return p.assignedFinanceId === userId;
+      if (targetUser?.department === 'Sales') return p.assignedSalesId === userId;
       if (targetUser?.department === 'Operations') {
-        return (
-          p.assignedOpsId === userId ||
-          (p.orderId && userOpsOrderIds.has(p.orderId)) ||
-          userOpsOrderDealIds.has(p.dealId)
-        );
+        return (p.orderId && userOpsOrderIds.has(p.orderId)) || userOpsOrderDealIds.has(p.dealId);
       }
-      if (targetUser?.department === 'Finance') {
-        return p.assignedFinanceId === userId;
-      }
-      return p.assignedSalesId === userId;
+      return p.assignedSalesId === userId || p.assignedFinanceId === userId;
     }
-    if (department !== 'all') {
-      if (department === 'Sales') {
-        const rep = USERS.find((u) => u.id === p.assignedSalesId);
-        return rep?.department === 'Sales';
-      }
-      if (department === 'Operations') {
-        const ops = USERS.find((u) => u.id === p.assignedOpsId);
-        return ops?.department === 'Operations' || (p.orderId && orders.some((o) => o.id === p.orderId && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'));
-      }
-      if (department === 'Finance') {
-        const fin = USERS.find((u) => u.id === p.assignedFinanceId);
-        return fin?.department === 'Finance';
-      }
+    if (department === 'Finance') {
+      return financeUserIds.has(p.assignedFinanceId || '');
+    }
+    if (department === 'Sales') {
+      return salesUserIds.has(p.assignedSalesId);
+    }
+    if (department === 'Operations') {
+      return (p.orderId && opsOrderIds.has(p.orderId)) || opsDealIds.has(p.dealId);
     }
     return true;
   });
@@ -380,21 +356,34 @@ export function calculateKpiData(
   invoices: Invoice[],
   payments: Payment[]
 ): PeriodKpiData {
+  // Sales & Lead metrics
   const newLeads = leads.length;
   const qualifiedLeads = leads.filter(
     (l) => l.status === 'Qualified' || l.status === 'Converted'
   ).length;
   const convertedLeads = leads.filter((l) => l.status === 'Converted').length;
   const unqualifiedLeads = leads.filter((l) => l.status === 'Unqualified').length;
-
   const conversionRate =
     newLeads > 0 ? Number(((convertedLeads / newLeads) * 100).toFixed(1)) : 0;
-
   const quotationsCreated = quotations.length;
   const dealsCreated = deals.length;
-  const invoicesGenerated = invoices.length;
-
   const totalDealValue = deals.reduce((sum, d) => sum + d.amount, 0);
+
+  // Operational fulfillment metrics
+  const totalOrders = orders.length;
+  const ordersInProgress = orders.filter((o) => o.status === 'In Progress').length;
+  const ordersCompleted = orders.filter((o) => o.status === 'Completed').length;
+  const ordersPending = orders.filter((o) => o.status === 'Pending' || o.status === 'On Hold').length;
+  const orderCompletionRate =
+    totalOrders > 0 ? Number(((ordersCompleted / totalOrders) * 100).toFixed(1)) : 0;
+  const totalOrderValue = orders.reduce((sum, o) => sum + o.orderValue, 0);
+  const stagesCompletedTotal = orders.reduce((sum, o) => sum + (o.stagesCompleted || 0), 0);
+  const stagesTotal = orders.reduce((sum, o) => sum + (o.stagesTotal || 4), 0);
+  const orderProgressRate =
+    stagesTotal > 0 ? Number(((stagesCompletedTotal / stagesTotal) * 100).toFixed(1)) : 0;
+
+  // Financial & billing metrics
+  const invoicesGenerated = invoices.length;
   const totalInvoiced = invoices.reduce((sum, i) => sum + i.invoiceAmount, 0);
   const totalCollected = payments
     .filter((p) => p.status === 'Paid')
@@ -403,6 +392,11 @@ export function calculateKpiData(
     invoices.length > 0
       ? invoices.reduce((sum, i) => sum + i.balanceAmount, 0)
       : Math.max(0, totalDealValue - totalCollected);
+  const collectionRate =
+    totalInvoiced > 0 ? Number(((totalCollected / totalInvoiced) * 100).toFixed(1)) : 0;
+  const paidInvoicesCount = invoices.filter((i) => i.status === 'Paid').length;
+  const unpaidInvoicesCount = invoices.filter((i) => i.status === 'Unpaid' || i.status === 'Partially Paid').length;
+  const paymentsCount = payments.length;
 
   return {
     newLeads,
@@ -412,11 +406,24 @@ export function calculateKpiData(
     conversionRate,
     quotationsCreated,
     dealsCreated,
-    invoicesGenerated,
     totalDealValue,
+    totalOrders,
+    ordersInProgress,
+    ordersCompleted,
+    ordersPending,
+    orderCompletionRate,
+    totalOrderValue,
+    stagesCompletedTotal,
+    stagesTotal,
+    orderProgressRate,
+    invoicesGenerated,
     totalInvoiced,
     totalCollected,
     outstandingRevenue,
+    collectionRate,
+    paidInvoicesCount,
+    unpaidInvoicesCount,
+    paymentsCount,
   };
 }
 
@@ -495,7 +502,18 @@ export function calculateComparison(
     conversionRateDiff: calcDiff(current.conversionRate, previous.conversionRate),
     quotationsDiff: calcDiff(current.quotationsCreated, previous.quotationsCreated),
     dealsDiff: calcDiff(current.dealsCreated, previous.dealsCreated),
+    totalDealValueDiff: calcDiff(current.totalDealValue, previous.totalDealValue),
     invoicesDiff: calcDiff(current.invoicesGenerated, previous.invoicesGenerated),
+    totalOrdersDiff: calcDiff(current.totalOrders, previous.totalOrders),
+    ordersInProgressDiff: calcDiff(current.ordersInProgress, previous.ordersInProgress),
+    ordersCompletedDiff: calcDiff(current.ordersCompleted, previous.ordersCompleted),
+    orderCompletionRateDiff: calcDiff(current.orderCompletionRate, previous.orderCompletionRate),
+    totalOrderValueDiff: calcDiff(current.totalOrderValue, previous.totalOrderValue),
+    orderProgressRateDiff: calcDiff(current.orderProgressRate, previous.orderProgressRate),
+    totalInvoicedDiff: calcDiff(current.totalInvoiced, previous.totalInvoiced),
+    totalCollectedDiff: calcDiff(current.totalCollected, previous.totalCollected),
+    outstandingRevenueDiff: calcDiff(current.outstandingRevenue, previous.outstandingRevenue),
+    collectionRateDiff: calcDiff(current.collectionRate, previous.collectionRate),
     periodDaysLabel: `vs previous ${days} days`,
   };
 }
@@ -899,4 +917,71 @@ export function getOrderProgressData(orders: Order[]): OrderProgressGroup[] {
       };
     })
     .sort((a, b) => b.total - a.total);
+}
+
+export interface PaymentMethodStat {
+  method: string;
+  count: number;
+  amount: number;
+  percentage: number;
+  color: string;
+}
+
+export function getPaymentMethodBreakdown(payments: Payment[]): PaymentMethodStat[] {
+  const counts: Record<string, { count: number; amount: number }> = {};
+  payments.forEach((p) => {
+    if (!counts[p.method]) counts[p.method] = { count: 0, amount: 0 };
+    counts[p.method].count++;
+    counts[p.method].amount += p.amount;
+  });
+
+  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+  const colors: Record<string, string> = {
+    UPI: '#2563EB',
+    'Net Banking': '#06B6D4',
+    'NEFT/RTGS': '#10B981',
+    'Credit Card': '#8B5CF6',
+    Cheque: '#F59E0B',
+  };
+
+  return Object.entries(counts).map(([method, data]) => ({
+    method,
+    count: data.count,
+    amount: data.amount,
+    percentage: totalAmount > 0 ? Number(((data.amount / totalAmount) * 100).toFixed(1)) : 0,
+    color: colors[method] || '#64748B',
+  }));
+}
+
+export interface InvoiceStatusStat {
+  status: string;
+  count: number;
+  amount: number;
+  percentage: number;
+  color: string;
+}
+
+export function getInvoiceStatusBreakdown(invoices: Invoice[]): InvoiceStatusStat[] {
+  const counts: Record<string, { count: number; amount: number }> = {};
+  invoices.forEach((i) => {
+    if (!counts[i.status]) counts[i.status] = { count: 0, amount: 0 };
+    counts[i.status].count++;
+    counts[i.status].amount += i.invoiceAmount;
+  });
+
+  const totalAmount = invoices.reduce((sum, i) => sum + i.invoiceAmount, 0);
+  const colors: Record<string, string> = {
+    Paid: '#10B981',
+    'Partially Paid': '#F59E0B',
+    Unpaid: '#EF4444',
+    Overdue: '#DC2626',
+  };
+
+  return Object.entries(counts).map(([status, data]) => ({
+    status,
+    count: data.count,
+    amount: data.amount,
+    percentage: totalAmount > 0 ? Number(((data.amount / totalAmount) * 100).toFixed(1)) : 0,
+    color: colors[status] || '#64748B',
+  }));
 }
