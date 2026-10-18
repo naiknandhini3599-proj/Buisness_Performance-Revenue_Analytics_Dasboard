@@ -11,6 +11,15 @@ import {
 
 export const USERS: User[] = [
   {
+    id: 'u-6',
+    name: 'Aazam Afroz',
+    email: 'aazam.afroz@company.com',
+    role: 'Sales',
+    avatarColor: 'bg-blue-600',
+    department: 'Sales',
+    designation: 'Senior Business Consultant',
+  },
+  {
     id: 'u-1',
     name: 'Nancy Singh',
     email: 'nancy.singh@company.com',
@@ -38,13 +47,13 @@ export const USERS: User[] = [
     designation: 'Business Development Specialist',
   },
   {
-    id: 'u-6',
-    name: 'Aazam Afroz',
-    email: 'aazam.afroz@company.com',
+    id: 'u-8',
+    name: 'Vikramaditya Rao',
+    email: 'vikram.rao@company.com',
     role: 'Sales',
-    avatarColor: 'bg-blue-600',
+    avatarColor: 'bg-teal-600',
     department: 'Sales',
-    designation: 'Senior Business Consultant',
+    designation: 'Strategic Accounts Director',
   },
   {
     id: 'u-4',
@@ -90,11 +99,9 @@ export const SERVICES = [
   'FSSAI License',
   'Website Development',
   'DSC & DIN Services',
-  'Penalty',
-  'Home Path',
   'Company Name Change',
   'One Person Company',
-  'Other Services',
+  'Corporate Tax Audit',
 ];
 
 const companyNames = [
@@ -123,6 +130,11 @@ const companyNames = [
   'Indus Global Exports',
   'Horizon FinTech Solutions',
   'Equinox Clean Energy',
+  'Radiant Mobility Systems',
+  'OmniCore Infotech',
+  'Aetherial Design Labs',
+  'Vanguard Biotech India',
+  'Trident Engineering Works',
 ];
 
 const contactNames = [
@@ -151,17 +163,38 @@ const contactNames = [
   'Rahul Bajaj',
   'Tanvi Kulkarni',
   'Zaid Mansoori',
+  'Shalini Tiwari',
+  'Deepak Chawla',
+  'Tarun Khandelwal',
+  'Sunita Narang',
+  'Varun Goel',
 ];
 
-const cities = ['Mumbai', 'Bengaluru', 'Delhi NCR', 'Pune', 'Hyderabad', 'Chennai', 'Ahmedabad', 'Kolkata', 'Jaipur', 'Chandigarh'];
+const cities = [
+  'Mumbai',
+  'Bengaluru',
+  'Delhi NCR',
+  'Pune',
+  'Hyderabad',
+  'Chennai',
+  'Ahmedabad',
+  'Kolkata',
+  'Jaipur',
+  'Chandigarh',
+];
 
 function pseudoRandom(seed: number) {
-  const x = Math.sin(seed++) * 10000;
+  const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
 }
 
-// Helper date generators
-export const getIsoDate = (year: number, month: number, day: number, hour = 10, minute = 30): string => {
+export const getIsoDate = (
+  year: number,
+  month: number,
+  day: number,
+  hour = 10,
+  minute = 30
+): string => {
   const m = month.toString().padStart(2, '0');
   const d = Math.max(1, Math.min(31, day)).toString().padStart(2, '0');
   const hh = Math.max(8, Math.min(20, hour)).toString().padStart(2, '0');
@@ -169,7 +202,7 @@ export const getIsoDate = (year: number, month: number, day: number, hour = 10, 
   return `${year}-${m}-${d}T${hh}:${mm}:00.000Z`;
 };
 
-// Generate realistic data
+// Global Centralized Data Stores
 export const RAW_LEADS: Lead[] = [];
 export const RAW_QUOTATIONS: Quotation[] = [];
 export const RAW_DEALS: Deal[] = [];
@@ -178,127 +211,160 @@ export const RAW_INVOICES: Invoice[] = [];
 export const RAW_PAYMENTS: Payment[] = [];
 export const RAW_ACTIVITIES: ActivityLog[] = [];
 
-// 1. GENERATE LEADS (130+ leads)
-// Attributed realistically across employees including Aazam Afroz, Nancy Singh, Sneha, Tannu, Gaurav, Srishti
-// Rep assignments:
-// Nancy Singh (u-1): 45 leads
-// Aazam Afroz (u-6): 32 leads
-// Sneha Choudhary (u-2): 25 leads
-// Tannu Kumari (u-3): 18 leads
-// Gaurav Pant (u-4): 6 leads
-// Srishti Upadhyay (u-5): 6 leads
-
-const leadAssignments = [
-  { repId: 'u-1', repName: 'Nancy Singh', count: 45 },
-  { repId: 'u-6', repName: 'Aazam Afroz', count: 32 },
-  { repId: 'u-2', repName: 'Sneha Choudhary', count: 25 },
-  { repId: 'u-3', repName: 'Tannu Kumari', count: 18 },
-  { repId: 'u-4', repName: 'Gaurav Pant', count: 6 },
-  { repId: 'u-5', repName: 'Srishti Upadhyay', count: 6 },
+// Distribution across sales reps:
+// 1. Aazam Afroz (u-6): 36 leads
+// 2. Nancy Singh (u-1): 38 leads
+// 3. Sneha Choudhary (u-2): 28 leads
+// 4. Tannu Kumari (u-3): 22 leads
+// 5. Vikramaditya Rao (u-8): 20 leads
+// 6. Gaurav Pant (u-4): 6 direct enterprise leads
+// 7. Srishti Upadhyay (u-5): 4 direct enterprise leads
+const salesRepAllocation = [
+  { repId: 'u-6', repName: 'Aazam Afroz', leadCount: 36, quoteTarget: 22, dealTarget: 14 },
+  { repId: 'u-1', repName: 'Nancy Singh', leadCount: 38, quoteTarget: 24, dealTarget: 15 },
+  { repId: 'u-2', repName: 'Sneha Choudhary', leadCount: 28, quoteTarget: 18, dealTarget: 11 },
+  { repId: 'u-3', repName: 'Tannu Kumari', leadCount: 22, quoteTarget: 14, dealTarget: 9 },
+  { repId: 'u-8', repName: 'Vikramaditya Rao', leadCount: 20, quoteTarget: 12, dealTarget: 8 },
+  { repId: 'u-4', repName: 'Gaurav Pant', leadCount: 6, quoteTarget: 4, dealTarget: 3 },
+  { repId: 'u-5', repName: 'Srishti Upadhyay', leadCount: 4, quoteTarget: 3, dealTarget: 2 },
 ];
 
-let globalLeadId = 209650;
-let leadIdx = 0;
+let leadIdCounter = 209700;
+let leadGlobalIndex = 0;
 
-leadAssignments.forEach((assign) => {
-  for (let k = 0; k < assign.count; k++) {
-    const id = `L-${globalLeadId - leadIdx}`;
-    const comp = companyNames[leadIdx % companyNames.length] + (leadIdx > 24 ? ` #${Math.floor(leadIdx / 15)}` : '');
-    const contact = contactNames[leadIdx % contactNames.length];
-    const source: ('Google Ads' | 'Website' | 'Other' | 'Just Dial' | 'Referral' | 'Social Media')[] = [
-      'Google Ads', 'Website', 'Google Ads', 'Website', 'Referral', 'Social Media'
+salesRepAllocation.forEach((alloc) => {
+  for (let k = 0; k < alloc.leadCount; k++) {
+    const id = `L-${leadIdCounter - leadGlobalIndex}`;
+    const compName =
+      companyNames[leadGlobalIndex % companyNames.length] +
+      (leadGlobalIndex >= companyNames.length ? ` #${Math.floor(leadGlobalIndex / companyNames.length) + 1}` : '');
+    const contactName = contactNames[(leadGlobalIndex * 3 + k) % contactNames.length];
+    const sourceOptions: Lead['source'][] = [
+      'Google Ads',
+      'Website',
+      'Referral',
+      'Google Ads',
+      'Social Media',
+      'Just Dial',
+      'Other',
     ];
-    const chosenSource = source[(leadIdx * 3 + k) % source.length];
+    const source = sourceOptions[(leadGlobalIndex + k * 2) % sourceOptions.length];
 
-    // Status distribution: ~45% Qualified, ~25% Converted, ~30% Unqualified
-    let status: 'New' | 'Qualified' | 'Converted' | 'Unqualified' = 'New';
-    const rand = pseudoRandom(leadIdx * 19 + 7);
-    if (rand < 0.22) {
+    // Status: ensure realistic funnel distribution
+    // k === 0, 1, 2 on reps are Won/Converted for rich conversions
+    let status: Lead['status'] = 'New';
+    const rand = pseudoRandom(leadGlobalIndex * 17 + 13);
+    if (k < Math.floor(alloc.dealTarget * 0.9)) {
       status = 'Converted';
-    } else if (rand < 0.58) {
+    } else if (rand < 0.55) {
       status = 'Qualified';
-    } else if (rand < 0.88) {
+    } else if (rand < 0.85) {
       status = 'Unqualified';
     } else {
       status = 'New';
     }
 
-    // Spread across Oct 1 - Oct 31, 2026, plus today (Oct 16-17) and some in September
-    let day = 1 + ((leadIdx * 4 + k * 3) % 28);
+    // Date generation spanning September & October 2026:
+    // Ensure every rep has leads on:
+    // - Today (Oct 16 & 17) -> k === 0 and 1
+    // - Last 7 Days (Oct 11 - 17) -> k from 0 to 5
+    // - Rest of Oct (Oct 1 - 10)
+    // - Previous Month (Sept 15 - 30) for prior-period comparisons
     let month = 10;
-    if (leadIdx > 115) {
-      month = 9; // prior month
-      day = 1 + (k % 28);
-    }
-    // Boost today/yesterday for demo testing
-    if (k === 0 || k === 1) {
-      day = 16;
+    let day = 1;
+    if (k === 0) {
+      day = 17; // Today
       month = 10;
+    } else if (k === 1) {
+      day = 16; // Yesterday
+      month = 10;
+    } else if (k === 2) {
+      day = 14;
+      month = 10;
+    } else if (k === 3) {
+      day = 12;
+      month = 10;
+    } else if (k === 4) {
+      day = 11;
+      month = 10;
+    } else if (k % 5 === 0) {
+      month = 9; // Prior month in September
+      day = 15 + (k % 14);
+    } else {
+      month = 10;
+      day = 1 + ((k * 4 + leadGlobalIndex) % 15);
     }
 
-    const createdAt = getIsoDate(2026, month, day, 9 + (k % 9), (k * 17) % 60);
-    const service = SERVICES[(leadIdx * 2 + k) % 10];
+    const createdAt = getIsoDate(2026, month, day, 9 + (k % 9), (k * 13) % 60);
+    const service = SERVICES[(leadGlobalIndex + k) % SERVICES.length];
 
     RAW_LEADS.push({
       id,
-      name: contact,
-      companyName: comp,
-      email: `${contact.toLowerCase().replace(/\s+/g, '.')}@${comp.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
-      phone: `+91 ${9810000000 + (leadIdx * 76543) % 89999999}`,
-      city: cities[(leadIdx + k) % cities.length],
-      source: chosenSource,
+      name: contactName,
+      companyName: compName,
+      email: `${contactName.toLowerCase().replace(/\s+/g, '.')}@${compName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')}.com`,
+      phone: `+91 ${9810000000 + ((leadGlobalIndex * 98765) % 89999999)}`,
+      city: cities[(leadGlobalIndex + k) % cities.length],
+      source,
       status,
       serviceInterest: service,
-      assignedSalesId: assign.repId,
-      assignedSalesName: assign.repName,
+      assignedSalesId: alloc.repId,
+      assignedSalesName: alloc.repName,
       createdAt,
-      qualifiedAt: status === 'Qualified' || status === 'Converted' ? getIsoDate(2026, month, Math.min(31, day + 1), 11, 0) : undefined,
-      convertedAt: status === 'Converted' ? getIsoDate(2026, month, Math.min(31, day + 2), 15, 30) : undefined,
-      unqualifiedAt: status === 'Unqualified' ? getIsoDate(2026, month, Math.min(31, day + 1), 16, 45) : undefined,
-      notes: `Inquired regarding ${service}. Contacted by ${assign.repName}.`
+      qualifiedAt:
+        status === 'Qualified' || status === 'Converted'
+          ? getIsoDate(2026, month, Math.min(31, day + 1), 11, 15)
+          : undefined,
+      convertedAt:
+        status === 'Converted'
+          ? getIsoDate(2026, month, Math.min(31, day + 2), 15, 45)
+          : undefined,
+      unqualifiedAt:
+        status === 'Unqualified'
+          ? getIsoDate(2026, month, Math.min(31, day + 1), 16, 20)
+          : undefined,
+      notes: `Consultation regarding ${service}. Initial discovery performed by ${alloc.repName}.`,
     });
 
-    leadIdx++;
+    leadGlobalIndex++;
   }
 });
 
-// 2. GENERATE QUOTATIONS (85+ quotations)
-// Distributed across all reps including Aazam Afroz, Nancy Singh, Sneha, Tannu, Gaurav, Srishti
-let globalQuoteId = 10490;
-let qIdx = 0;
+// 2. GENERATE REALISTIC QUOTATIONS (85+ quotations)
+let quoteIdCounter = 10550;
+let quoteGlobalIndex = 0;
 
-const repQuoteAllocations = [
-  { repId: 'u-1', repName: 'Nancy Singh', count: 32 },
-  { repId: 'u-6', repName: 'Aazam Afroz', count: 24 },
-  { repId: 'u-2', repName: 'Sneha Choudhary', count: 18 },
-  { repId: 'u-3', repName: 'Tannu Kumari', count: 12 },
-  { repId: 'u-4', repName: 'Gaurav Pant', count: 5 },
-  { repId: 'u-5', repName: 'Srishti Upadhyay', count: 4 },
-];
-
-repQuoteAllocations.forEach((alloc) => {
-  // Find leads belonging to this rep
+salesRepAllocation.forEach((alloc) => {
   const repLeads = RAW_LEADS.filter((l) => l.assignedSalesId === alloc.repId);
 
-  for (let k = 0; k < alloc.count; k++) {
-    const quoteId = `Q-${globalQuoteId - qIdx}`;
-    const lead = repLeads[k % repLeads.length] || RAW_LEADS[qIdx % RAW_LEADS.length];
+  for (let k = 0; k < alloc.quoteTarget; k++) {
+    const id = `Q-${quoteIdCounter - quoteGlobalIndex}`;
+    const lead = repLeads[k % repLeads.length] || RAW_LEADS[quoteGlobalIndex % RAW_LEADS.length];
     const service = lead.serviceInterest || SERVICES[k % SERVICES.length];
 
-    // Status: Accepted, Pending, Rejected
-    const r = pseudoRandom(qIdx * 13 + 5);
-    const status: ('Accepted' | 'Pending' | 'Rejected' | 'Viewed' | 'Sent') =
-      r < 0.35 ? 'Accepted' : r < 0.75 ? 'Pending' : r < 0.9 ? 'Rejected' : 'Sent';
+    // Quotation created after or on lead creation date
+    const leadDate = new Date(lead.createdAt);
+    const quoteDate = new Date(leadDate);
+    quoteDate.setHours(quoteDate.getHours() + 4);
 
-    const baseAmount = Math.round(4500 + pseudoRandom(qIdx * 31) * 18000);
+    const baseAmount = Math.round(5000 + pseudoRandom(quoteGlobalIndex * 29 + 7) * 22000);
     const taxAmount = Math.round(baseAmount * 0.18);
     const finalAmount = baseAmount + taxAmount;
 
-    const createdAt = lead.createdAt;
-    const expiryDate = getIsoDate(2026, 11, 15, 18, 0);
+    // Status: Accepted if deal target, else Pending or Sent
+    const status: Quotation['status'] =
+      k < alloc.dealTarget
+        ? 'Accepted'
+        : k % 4 === 0
+        ? 'Rejected'
+        : k % 3 === 0
+        ? 'Pending'
+        : 'Sent';
 
     RAW_QUOTATIONS.push({
-      id: quoteId,
+      id,
       leadId: lead.id,
       serviceCategory: service,
       amount: baseAmount,
@@ -306,95 +372,91 @@ repQuoteAllocations.forEach((alloc) => {
       discount: 0,
       finalAmount,
       status,
-      createdAt,
-      expiryDate,
+      createdAt: quoteDate.toISOString(),
+      expiryDate: getIsoDate(2026, 11, 20, 18, 0),
       assignedSalesId: alloc.repId,
       assignedSalesName: alloc.repName,
-      notes: `Proposal for ${service} package including documentation and filing fees.`
+      notes: `Commercial proposal for ${service} including registration fees and legal documentation.`,
     });
 
-    qIdx++;
+    quoteGlobalIndex++;
   }
 });
 
-// 3. GENERATE DEALS (45+ deals)
-// Attributed to reps with realistic values and statuses
-let globalDealId = 850;
-let dealIdx = 0;
+// 3. GENERATE DEALS (55+ commercial deals)
+let dealIdCounter = 890;
+let dealGlobalIndex = 0;
 
-const repDealAllocations = [
-  { repId: 'u-1', repName: 'Nancy Singh', count: 16, targetRevenue: 86200 },
-  { repId: 'u-6', repName: 'Aazam Afroz', count: 12, targetRevenue: 58400 },
-  { repId: 'u-2', repName: 'Sneha Choudhary', count: 9, targetRevenue: 42000 },
-  { repId: 'u-3', repName: 'Tannu Kumari', count: 6, targetRevenue: 22500 },
-  { repId: 'u-4', repName: 'Gaurav Pant', count: 3, targetRevenue: 14000 },
-  { repId: 'u-5', repName: 'Srishti Upadhyay', count: 2, targetRevenue: 9500 },
-];
+salesRepAllocation.forEach((alloc) => {
+  const repQuotes = RAW_QUOTATIONS.filter(
+    (q) => q.assignedSalesId === alloc.repId && q.status === 'Accepted'
+  );
 
-repDealAllocations.forEach((alloc) => {
-  const repQuotes = RAW_QUOTATIONS.filter((q) => q.assignedSalesId === alloc.repId);
+  for (let k = 0; k < alloc.dealTarget; k++) {
+    const id = `D-${dealIdCounter - dealGlobalIndex}`;
+    const quote = repQuotes[k % repQuotes.length] || RAW_QUOTATIONS[dealGlobalIndex % RAW_QUOTATIONS.length];
+    const lead = RAW_LEADS.find((l) => l.id === quote.leadId) || RAW_LEADS[dealGlobalIndex % RAW_LEADS.length];
 
-  for (let k = 0; k < alloc.count; k++) {
-    const dealId = `D-${globalDealId - dealIdx}`;
-    const quote = repQuotes[k % repQuotes.length];
-    const lead = RAW_LEADS.find((l) => l.id === quote?.leadId) || RAW_LEADS[dealIdx % RAW_LEADS.length];
+    // Link quote to deal
+    quote.dealId = id;
+    quote.status = 'Accepted';
 
-    if (quote) {
-      quote.dealId = dealId;
-      quote.status = 'Accepted';
-    }
+    const quoteDate = new Date(quote.createdAt);
+    const dealDate = new Date(quoteDate);
+    dealDate.setHours(dealDate.getHours() + 6);
 
-    const r = pseudoRandom(dealIdx * 23 + 11);
-    const stage: ('Won' | 'In Discussion' | 'Negotiation' | 'Proposal Sent' | 'Lost') =
-      r < 0.65 ? 'Won' : r < 0.85 ? 'In Discussion' : r < 0.95 ? 'Negotiation' : 'Won';
+    const stages: Deal['stage'][] = ['Won', 'Won', 'Won', 'Negotiation', 'In Discussion'];
+    const stage = stages[k % stages.length];
+    const priorities: Deal['priority'][] = ['High', 'Medium', 'Medium', 'Low'];
+    const priority = priorities[k % priorities.length];
 
-    const priority: ('High' | 'Medium' | 'Low') =
-      k % 3 === 0 ? 'High' : k % 3 === 1 ? 'Medium' : 'Low';
-
-    const dealValue = Math.round(5000 + pseudoRandom(dealIdx * 41) * 16000);
-    const createdAt = quote ? quote.createdAt : lead.createdAt;
+    const dealValue = quote.amount;
 
     RAW_DEALS.push({
-      id: dealId,
+      id,
       leadId: lead.id,
-      quotationIds: quote ? [quote.id] : [],
-      title: `${lead.companyName} - ${quote?.serviceCategory || 'Corporate Services'}`,
-      serviceCategory: quote?.serviceCategory || 'Private Limited Company',
+      quotationIds: [quote.id],
+      title: `${lead.companyName} - ${quote.serviceCategory}`,
+      serviceCategory: quote.serviceCategory,
       amount: dealValue,
       stage,
       priority,
       assignedSalesId: alloc.repId,
       assignedSalesName: alloc.repName,
-      createdAt,
-      expectedCloseDate: getIsoDate(2026, 10, 25, 17, 0),
-      closedAt: stage === 'Won' ? getIsoDate(2026, 10, 20, 16, 0) : undefined,
+      createdAt: dealDate.toISOString(),
+      expectedCloseDate: getIsoDate(2026, 10, 28, 17, 30),
+      closedAt: stage === 'Won' ? dealDate.toISOString() : undefined,
     });
 
-    dealIdx++;
+    dealGlobalIndex++;
   }
 });
 
-// 4. GENERATE ORDERS (45+ fulfillment orders)
-// Explicitly mapped to deals, sales reps, and operations team members
-let globalOrderId = 2190;
-let orderIdx = 0;
+// 4. GENERATE FULFILLMENT ORDERS (48+ orders)
+let orderIdCounter = 2240;
+let orderGlobalIndex = 0;
 
 RAW_DEALS.forEach((deal, idx) => {
-  // Generate 1-2 orders per deal if Won or In Discussion
+  // Deals won or in progress trigger fulfillment orders
   if (deal.stage === 'Won' || idx % 2 === 0) {
-    const orderId = `O-${globalOrderId - orderIdx}`;
-    const ops = idx % 2 === 0
-      ? { id: 'u-4', name: 'Gaurav Pant' }
-      : { id: 'u-5', name: 'Srishti Upadhyay' };
+    const id = `O-${orderIdCounter - orderGlobalIndex}`;
+    const ops =
+      idx % 2 === 0
+        ? { id: 'u-4', name: 'Gaurav Pant' }
+        : { id: 'u-5', name: 'Srishti Upadhyay' };
 
-    const status: ('Completed' | 'In Progress' | 'Pending' | 'On Hold') =
-      idx % 3 === 0 ? 'Completed' : idx % 3 === 1 ? 'In Progress' : 'Pending';
+    const status: Order['status'] =
+      idx % 4 === 0 ? 'Completed' : idx % 4 === 1 ? 'In Progress' : 'Pending';
 
     const stagesTotal = 4;
     const stagesCompleted = status === 'Completed' ? 4 : status === 'In Progress' ? 2 : 1;
 
+    const dealDate = new Date(deal.createdAt);
+    const orderDate = new Date(dealDate);
+    orderDate.setHours(orderDate.getHours() + 3);
+
     RAW_ORDERS.push({
-      id: orderId,
+      id,
       dealId: deal.id,
       leadId: deal.leadId,
       serviceCategory: deal.serviceCategory,
@@ -404,195 +466,203 @@ RAW_DEALS.forEach((deal, idx) => {
       assignedOpsName: ops.name,
       assignedSalesId: deal.assignedSalesId,
       assignedSalesName: deal.assignedSalesName,
-      createdAt: deal.createdAt,
+      createdAt: orderDate.toISOString(),
       stagesTotal,
       stagesCompleted,
-      expectedCompletionDate: getIsoDate(2026, 11, 5, 17, 0),
-      completedAt: status === 'Completed' ? getIsoDate(2026, 10, 22, 14, 0) : undefined,
+      expectedCompletionDate: getIsoDate(2026, 11, 10, 18, 0),
+      completedAt: status === 'Completed' ? getIsoDate(2026, 10, 22, 16, 0) : undefined,
       isOverdue: false,
     });
 
-    orderIdx++;
+    orderGlobalIndex++;
   }
 });
 
-// 5. GENERATE INVOICES (150+ tax invoices)
-// Distributed across all deals, correctly attributed to the deal's assignedSalesId!
-let globalInvId = 3150;
-for (let i = 0; i < 150; i++) {
-  const invId = `INV-${globalInvId - i}`;
-  const deal = RAW_DEALS[i % RAW_DEALS.length];
+// 5. GENERATE TAX INVOICES (100+ invoices)
+let invoiceIdCounter = 3250;
+let invoiceGlobalIndex = 0;
+
+RAW_DEALS.forEach((deal, idx) => {
+  // Generate 1-2 invoices per deal
   const order = RAW_ORDERS.find((o) => o.dealId === deal.id);
   const lead = RAW_LEADS.find((l) => l.id === deal.leadId) || RAW_LEADS[0];
 
-  const invoiceAmount = Math.round(deal.amount * (0.5 + pseudoRandom(i * 19) * 0.5));
-  const isPaid = i % 3 !== 0;
-  const paidAmount = isPaid ? invoiceAmount : Math.round(invoiceAmount * 0.4);
-  const balanceAmount = invoiceAmount - paidAmount;
+  const invCount = deal.stage === 'Won' ? 2 : 1;
+  for (let m = 0; m < invCount; m++) {
+    const id = `INV-${invoiceIdCounter - invoiceGlobalIndex}`;
+    const dealDate = new Date(deal.createdAt);
+    dealDate.setHours(dealDate.getHours() + 4 + m * 24);
 
-  RAW_INVOICES.push({
-    id: invId,
-    dealId: deal.id,
-    orderId: order?.id,
-    leadId: lead.id,
-    customerName: lead.companyName,
-    invoiceAmount,
-    paidAmount,
-    balanceAmount,
-    status: isPaid ? 'Paid' : 'Partially Paid',
-    issueDate: deal.createdAt,
-    dueDate: getIsoDate(2026, 11, 10, 18, 0),
-    assignedSalesId: deal.assignedSalesId, // Attributed to sales rep
-    assignedFinanceId: 'u-7', // Rajesh Verma (Finance Lead)
-    assignedFinanceName: 'Rajesh Verma',
-    assignedOpsId: order?.assignedOpsId,
-  });
-}
+    const invoiceAmount = Math.round((deal.amount / invCount) * 1.18);
+    const isPaid = deal.stage === 'Won' && (m === 0 || idx % 3 !== 0);
+    const paidAmount = isPaid ? invoiceAmount : m === 0 ? Math.round(invoiceAmount * 0.5) : 0;
+    const balanceAmount = invoiceAmount - paidAmount;
 
-// 6. GENERATE PAYMENTS (80+ payment records)
-// Distributed across deals & reps, correctly attributed!
-let globalPayId = 1120;
-let payIdx = 0;
+    RAW_INVOICES.push({
+      id,
+      dealId: deal.id,
+      orderId: order?.id,
+      leadId: lead.id,
+      customerName: lead.companyName,
+      invoiceAmount,
+      paidAmount,
+      balanceAmount,
+      status: balanceAmount === 0 ? 'Paid' : paidAmount > 0 ? 'Partially Paid' : 'Unpaid',
+      issueDate: dealDate.toISOString(),
+      dueDate: getIsoDate(2026, 11, 15, 18, 0),
+      assignedSalesId: deal.assignedSalesId,
+      assignedFinanceId: 'u-7',
+      assignedFinanceName: 'Rajesh Verma',
+      assignedOpsId: order?.assignedOpsId,
+    });
 
-RAW_DEALS.forEach((deal) => {
-  const dealInvoices = RAW_INVOICES.filter((inv) => inv.dealId === deal.id);
-  const order = RAW_ORDERS.find((o) => o.dealId === deal.id);
-  const lead = RAW_LEADS.find((l) => l.id === deal.leadId) || RAW_LEADS[0];
-
-  dealInvoices.forEach((inv) => {
-    if (inv.paidAmount > 0) {
-      const payId = `P-${globalPayId - payIdx}`;
-      const methods: ('UPI' | 'Net Banking' | 'Credit Card' | 'NEFT/RTGS')[] = [
-        'UPI', 'Net Banking', 'Credit Card', 'NEFT/RTGS'
-      ];
-      const method = methods[payIdx % methods.length];
-
-      RAW_PAYMENTS.push({
-        id: payId,
-        orderId: order?.id,
-        dealId: deal.id,
-        invoiceId: inv.id,
-        customerName: lead.companyName,
-        amount: inv.paidAmount,
-        status: 'Paid',
-        method,
-        transactionRef: `TXN-IND-${20261000 + payIdx}-${payId}`,
-        paymentDate: inv.issueDate,
-        assignedSalesId: deal.assignedSalesId, // Attributed to rep
-        assignedFinanceId: 'u-7', // Rajesh Verma (Finance Lead)
-        assignedFinanceName: 'Rajesh Verma',
-        assignedOpsId: order?.assignedOpsId,
-        notes: `Payment received for ${deal.title} via ${method}`
-      });
-
-      payIdx++;
-    }
-  });
+    invoiceGlobalIndex++;
+  }
 });
 
-// 7. RECENT CRM ACTIVITIES (40+ activities)
-// Including events from Aazam Afroz, Nancy Singh, Sneha, Tannu, Gaurav, Srishti, Rajesh
+// 6. GENERATE PAYMENTS (75+ payment receipts)
+let paymentIdCounter = 1180;
+let paymentGlobalIndex = 0;
+
+RAW_INVOICES.forEach((inv) => {
+  if (inv.paidAmount > 0) {
+    const id = `P-${paymentIdCounter - paymentGlobalIndex}`;
+    const paymentMethods: Payment['method'][] = [
+      'UPI',
+      'Net Banking',
+      'NEFT/RTGS',
+      'Credit Card',
+      'UPI',
+    ];
+    const method = paymentMethods[paymentGlobalIndex % paymentMethods.length];
+    const invDate = new Date(inv.issueDate);
+    const payDate = new Date(invDate);
+    payDate.setHours(payDate.getHours() + 2);
+
+    RAW_PAYMENTS.push({
+      id,
+      orderId: inv.orderId,
+      dealId: inv.dealId,
+      invoiceId: inv.id,
+      customerName: inv.customerName,
+      amount: inv.paidAmount,
+      status: 'Paid',
+      method,
+      transactionRef: `TXN-IND-${20261000 + paymentGlobalIndex}-${id}`,
+      paymentDate: payDate.toISOString(),
+      assignedSalesId: inv.assignedSalesId,
+      assignedFinanceId: 'u-7',
+      assignedFinanceName: 'Rajesh Verma',
+      assignedOpsId: inv.assignedOpsId,
+      notes: `Bank reconciliation: received ${inv.paidAmount} INR via ${method}.`,
+    });
+
+    paymentGlobalIndex++;
+  }
+});
+
+// 7. INITIAL RECENT CRM ACTIVITIES (40+ activities)
 export const INITIAL_ACTIVITIES: ActivityLog[] = [
   {
     id: 'act-1',
-    timestamp: '2026-10-16T12:14:10.847Z',
+    timestamp: '2026-10-17T11:45:10.000Z',
     employeeId: 'u-6',
     employeeName: 'Aazam Afroz',
-    action: 'Lead updated',
+    action: 'Lead converted',
     recordType: 'Lead',
-    recordId: 'L-209645',
-    details: 'Discovery call completed. Enterprise proposal requested for Private Limited Company.'
+    recordId: 'L-209700',
+    details: 'Customer finalized incorporation package. Commercial proposal accepted.',
   },
   {
     id: 'act-2',
-    timestamp: '2026-10-16T12:10:05.120Z',
-    employeeId: 'u-6',
-    employeeName: 'Aazam Afroz',
-    action: 'Quotation created',
-    recordType: 'Quotation',
-    recordId: 'Q-10488',
-    details: 'Issued quotation of ₹18,500 for Trademark and ISO certification.'
+    timestamp: '2026-10-17T10:30:15.000Z',
+    employeeId: 'u-7',
+    employeeName: 'Rajesh Verma',
+    action: 'Payment recorded',
+    recordType: 'Payment',
+    recordId: 'P-1180',
+    details: 'Reconciled incoming UPI bank transfer of ₹24,500 from Acme Technologies Pvt Ltd.',
   },
   {
     id: 'act-3',
-    timestamp: '2026-10-16T11:53:02.446Z',
-    employeeId: 'u-2',
-    employeeName: 'Sneha Choudhary',
-    action: 'Payment recorded',
-    recordType: 'Payment',
-    recordId: 'P-1081',
-    details: 'Advance payment of ₹15,000 received via UPI.'
+    timestamp: '2026-10-17T09:15:20.000Z',
+    employeeId: 'u-1',
+    employeeName: 'Nancy Singh',
+    action: 'Quotation created',
+    recordType: 'Quotation',
+    recordId: 'Q-10549',
+    details: 'Dispatched GST Registration and Trademark filing proposal.',
   },
   {
     id: 'act-4',
-    timestamp: '2026-10-16T11:45:26.072Z',
-    employeeId: 'u-6',
-    employeeName: 'Aazam Afroz',
-    action: 'Deal created',
-    recordType: 'Deal',
-    recordId: 'D-848',
-    details: 'Deal registered: Aura Media Incorporation (₹14,500).'
-  },
-  {
-    id: 'act-5',
-    timestamp: '2026-10-16T11:30:19.330Z',
-    employeeId: 'u-1',
-    employeeName: 'Nancy Singh',
-    action: 'Lead updated',
-    recordType: 'Lead',
-    recordId: 'L-209610',
-    details: 'Updated status to Qualified after onboarding review.'
-  },
-  {
-    id: 'act-6',
-    timestamp: '2026-10-16T10:44:50.539Z',
-    employeeId: 'u-3',
-    employeeName: 'Tannu Kumari',
-    action: 'Quotation created',
-    recordType: 'Quotation',
-    recordId: 'Q-10466',
-    details: 'Quotation generated for LLP Registration package.'
-  },
-  {
-    id: 'act-7',
-    timestamp: '2026-10-16T10:15:12.890Z',
+    timestamp: '2026-10-16T16:20:45.000Z',
     employeeId: 'u-4',
     employeeName: 'Gaurav Pant',
     action: 'Order completed',
     recordType: 'Order',
-    recordId: 'O-2182',
-    details: 'MCA incorporation certificate filed and approved.'
+    recordId: 'O-2238',
+    details: 'MCA incorporation certificate approved and delivered to client.',
   },
   {
-    id: 'act-8',
-    timestamp: '2026-10-15T16:22:04.110Z',
-    employeeId: 'u-6',
-    employeeName: 'Aazam Afroz',
-    action: 'Deal updated',
+    id: 'act-5',
+    timestamp: '2026-10-16T15:10:00.000Z',
+    employeeId: 'u-2',
+    employeeName: 'Sneha Choudhary',
+    action: 'Deal created',
     recordType: 'Deal',
-    recordId: 'D-845',
-    details: 'Stage updated to Won following client contract execution.'
+    recordId: 'D-888',
+    details: 'Registered high-priority contract for Nexus Logistics LLP (₹18,500).',
   },
   {
-    id: 'act-9',
-    timestamp: '2026-10-15T14:40:19.450Z',
+    id: 'act-6',
+    timestamp: '2026-10-16T14:05:30.000Z',
     employeeId: 'u-5',
     employeeName: 'Srishti Upadhyay',
     action: 'Order stage updated',
     recordType: 'Order',
-    recordId: 'O-2178',
-    details: 'Digital Signature Certificate verified.'
+    recordId: 'O-2235',
+    details: 'Stage 3 of 4: Digital Signature & Board Resolution verified.',
+  },
+  {
+    id: 'act-7',
+    timestamp: '2026-10-16T11:55:00.000Z',
+    employeeId: 'u-3',
+    employeeName: 'Tannu Kumari',
+    action: 'Lead status changed',
+    recordType: 'Lead',
+    recordId: 'L-209680',
+    details: 'Upgraded lead status to Qualified following compliance discovery.',
+  },
+  {
+    id: 'act-8',
+    timestamp: '2026-10-15T16:40:00.000Z',
+    employeeId: 'u-8',
+    employeeName: 'Vikramaditya Rao',
+    action: 'Quotation accepted',
+    recordType: 'Quotation',
+    recordId: 'Q-10530',
+    details: 'Client executed agreement for Corporate Tax Audit and Annual Compliance.',
+  },
+  {
+    id: 'act-9',
+    timestamp: '2026-10-15T14:15:00.000Z',
+    employeeId: 'u-6',
+    employeeName: 'Aazam Afroz',
+    action: 'Deal updated',
+    recordType: 'Deal',
+    recordId: 'D-885',
+    details: 'Deal stage advanced to Won following contract sign-off.',
   },
   {
     id: 'act-10',
-    timestamp: '2026-10-15T11:18:22.000Z',
+    timestamp: '2026-10-15T11:00:00.000Z',
     employeeId: 'u-7',
     employeeName: 'Rajesh Verma',
     action: 'Invoice generated',
     recordType: 'Invoice',
-    recordId: 'INV-3142',
-    details: 'Invoice generated with 18% GST for audit review.'
-  }
+    recordId: 'INV-3240',
+    details: 'Generated tax invoice with 18% GST for Zenith Solar Solutions.',
+  },
 ];
 
 RAW_ACTIVITIES.push(...INITIAL_ACTIVITIES);

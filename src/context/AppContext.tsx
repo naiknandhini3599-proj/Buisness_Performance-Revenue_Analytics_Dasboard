@@ -68,7 +68,8 @@ interface AppContextType {
   monthlyTarget: number;
   setMonthlyTarget: (target: number) => void;
   preferences: UserPreferences;
-  savePreferences: (partial: Partial<UserPreferences>) => void;
+  savePreferences: (partial: Partial<UserPreferences>) => boolean;
+  resetPreferencesToDefault: () => void;
 
   // Mutable In-Memory Records
   leads: Lead[];
@@ -124,6 +125,8 @@ interface AppContextType {
   setSelectedOrderId: (id: string | null) => void;
   selectedPaymentId: string | null;
   setSelectedPaymentId: (id: string | null) => void;
+  selectedInvoiceId: string | null;
+  setSelectedInvoiceId: (id: string | null) => void;
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
   isCustomDateOpen: boolean;
@@ -172,35 +175,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     searchQuery: '',
   });
 
-  // Monthly Revenue Target with explicit LocalStorage persistence
-  const [monthlyTarget, setMonthlyTargetState] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('crm_monthly_target');
-      if (saved) {
-        const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed) && parsed > 0) return parsed;
-      }
-    } catch (e) {
-      // ignore
-    }
-    return DEFAULT_MONTHLY_TARGET;
-  });
-
-  const setMonthlyTarget = (target: number) => {
-    setMonthlyTargetState(target);
-    try {
-      localStorage.setItem('crm_monthly_target', target.toString());
-    } catch (e) {
-      // ignore
-    }
-  };
-
-  // Full User Preferences Persistence
+  // Full User Preferences Persistence as the single source of truth
   const [preferences, setPreferencesState] = useState<UserPreferences>(() => {
     try {
       const saved = localStorage.getItem('crm_user_preferences');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.monthlyTarget === 'number') {
+          return parsed;
+        }
+      }
+      const legacyTarget = localStorage.getItem('crm_monthly_target');
+      if (legacyTarget) {
+        const parsedTarget = parseInt(legacyTarget, 10);
+        if (!isNaN(parsedTarget) && parsedTarget > 0) {
+          return {
+            monthlyTarget: parsedTarget,
+            currency: 'INR',
+            dateFormat: 'DD/MM/YYYY',
+            defaultDatePreset: 'oct2026',
+            defaultEmployeeFilter: 'all',
+            notificationsEnabled: true,
+            activeUserId: 'u-6',
+          };
+        }
       }
     } catch (e) {
       // ignore
@@ -209,40 +207,85 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       monthlyTarget: DEFAULT_MONTHLY_TARGET,
       currency: 'INR',
       dateFormat: 'DD/MM/YYYY',
+      defaultDatePreset: 'oct2026',
+      defaultEmployeeFilter: 'all',
       notificationsEnabled: true,
       activeUserId: 'u-6',
     };
   });
 
-  const savePreferences = (partial: Partial<UserPreferences>) => {
-    setPreferencesState((prev) => {
-      const updated = { ...prev, ...partial };
-      try {
-        localStorage.setItem('crm_user_preferences', JSON.stringify(updated));
-        if (partial.monthlyTarget) {
-          localStorage.setItem('crm_monthly_target', partial.monthlyTarget.toString());
-          setMonthlyTargetState(partial.monthlyTarget);
-        }
-        if (partial.activeUserId) {
-          const matched = USERS.find((u) => u.id === partial.activeUserId);
-          if (matched) {
-            const userObj: AuthUser = {
-              id: matched.id,
-              name: matched.name,
-              email: matched.email,
-              role: matched.role,
-              avatarColor: matched.avatarColor,
-              department: matched.department,
-            };
-            setAuthUser(userObj);
-            localStorage.setItem('crm_active_user', JSON.stringify(userObj));
+  const monthlyTarget = preferences.monthlyTarget;
+
+  const setMonthlyTarget = (target: number) => {
+    savePreferences({ monthlyTarget: target });
+  };
+
+  const savePreferences = (partial: Partial<UserPreferences>): boolean => {
+    try {
+      setPreferencesState((prev) => {
+        const updated = { ...prev, ...partial };
+        try {
+          localStorage.setItem('crm_user_preferences', JSON.stringify(updated));
+          if (updated.monthlyTarget !== undefined) {
+            localStorage.setItem('crm_monthly_target', updated.monthlyTarget.toString());
           }
+          if (partial.activeUserId) {
+            const matched = USERS.find((u) => u.id === partial.activeUserId);
+            if (matched) {
+              const userObj: AuthUser = {
+                id: matched.id,
+                name: matched.name,
+                email: matched.email,
+                role: matched.role,
+                avatarColor: matched.avatarColor,
+                department: matched.department,
+              };
+              setAuthUser(userObj);
+              localStorage.setItem('crm_active_user', JSON.stringify(userObj));
+            }
+          }
+        } catch (e) {
+          // ignore
         }
-      } catch (e) {
-        // ignore
+        return updated;
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const resetPreferencesToDefault = () => {
+    const defaults: UserPreferences = {
+      monthlyTarget: DEFAULT_MONTHLY_TARGET,
+      currency: 'INR',
+      dateFormat: 'DD/MM/YYYY',
+      defaultDatePreset: 'oct2026',
+      defaultEmployeeFilter: 'all',
+      notificationsEnabled: true,
+      activeUserId: 'u-6',
+    };
+    setPreferencesState(defaults);
+    try {
+      localStorage.setItem('crm_user_preferences', JSON.stringify(defaults));
+      localStorage.setItem('crm_monthly_target', DEFAULT_MONTHLY_TARGET.toString());
+      const defaultUser = USERS.find((u) => u.id === 'u-6');
+      if (defaultUser) {
+        const userObj: AuthUser = {
+          id: defaultUser.id,
+          name: defaultUser.name,
+          email: defaultUser.email,
+          role: defaultUser.role,
+          avatarColor: defaultUser.avatarColor,
+          department: defaultUser.department,
+        };
+        setAuthUser(userObj);
+        localStorage.setItem('crm_active_user', JSON.stringify(userObj));
       }
-      return updated;
-    });
+    } catch (e) {
+      // ignore
+    }
+    resetFilters();
   };
 
   // In-memory data store
@@ -260,6 +303,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
 
@@ -320,7 +364,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateFilter = (partial: Partial<FilterState>) => {
-    setFilters((prev) => ({ ...prev, ...partial }));
+    setFilters((prev) => {
+      const next = { ...prev, ...partial };
+      if (partial.userId && partial.userId !== 'all') {
+        const u = USERS.find((user) => user.id === partial.userId);
+        if (u) {
+          next.department = 'all';
+        }
+      }
+      return next;
+    });
   };
 
   const resetFilters = () => {
@@ -634,18 +687,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   }, [currentFiltered.filteredDeals, currentFiltered.filteredPayments, filters.dateRange]);
 
+  // Filtered dataset for team activity ranking within the active period
+  const periodDateFiltered = useMemo(() => {
+    return filterRecords(leads, quotations, deals, orders, invoices, payments, activities, {
+      ...filters,
+      userId: 'all',
+      department: 'all',
+    });
+  }, [leads, quotations, deals, orders, invoices, payments, activities, filters.dateRange]);
+
   const salesTeamActivity = useMemo(() => {
     return getSalesTeamActivity(
-      currentFiltered.filteredLeads,
-      currentFiltered.filteredQuotations,
-      currentFiltered.filteredDeals,
-      currentFiltered.filteredPayments
+      periodDateFiltered.filteredLeads,
+      periodDateFiltered.filteredQuotations,
+      periodDateFiltered.filteredDeals,
+      periodDateFiltered.filteredPayments
     );
-  }, [currentFiltered]);
+  }, [periodDateFiltered]);
 
   const opsTeamActivity = useMemo(() => {
-    return getOperationsTeamActivity(currentFiltered.filteredOrders);
-  }, [currentFiltered.filteredOrders]);
+    return getOperationsTeamActivity(periodDateFiltered.filteredOrders);
+  }, [periodDateFiltered]);
 
   const orderProgress = useMemo(() => {
     return getOrderProgressData(currentFiltered.filteredOrders);
@@ -666,6 +728,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setMonthlyTarget,
         preferences,
         savePreferences,
+        resetPreferencesToDefault,
         leads,
         quotations,
         deals,
@@ -705,6 +768,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedOrderId,
         selectedPaymentId,
         setSelectedPaymentId,
+        selectedInvoiceId,
+        setSelectedInvoiceId,
         isSearchOpen,
         setIsSearchOpen,
         isCustomDateOpen,

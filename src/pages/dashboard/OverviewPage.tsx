@@ -72,7 +72,7 @@ export const OverviewPage: React.FC = () => {
     <div className="space-y-6">
       {/* Page Title */}
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-[#0F172A] sm:text-2xl">
+        <h1 className="text-xl font-bold tracking-tight text-[#172554] sm:text-2xl">
           Executive Business Overview
         </h1>
         <p className="mt-1 text-xs text-[#64748B]">

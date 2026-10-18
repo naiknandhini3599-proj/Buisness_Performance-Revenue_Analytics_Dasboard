@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   LineChart,
   Line,
@@ -11,21 +12,25 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { Target, TrendingUp, Filter, Users } from 'lucide-react';
-import { formatINR, formatPercent } from '../utils/formatters';
+import { Target, TrendingUp, Filter, Users, ArrowRight } from 'lucide-react';
+import { formatINR } from '../utils/formatters';
 import {
   DailyTrendPoint,
   LeadSourceStat,
+  calculateTargetAchievement,
 } from '../utils/calculations';
 import { PeriodKpiData } from '../types';
-import { MONTHLY_TARGET } from '../data/dummyData';
+import { DEFAULT_MONTHLY_TARGET } from '../data/dummyData';
 
 interface LeadAnalyticsSectionProps {
   currentKpi: PeriodKpiData;
   leadSources: LeadSourceStat[];
   dailyLeadTrend: DailyTrendPoint[];
-  monthlyTarget?: number;
-  onDrillDown: (type: 'leads' | 'qualified' | 'converted' | 'unqualified' | 'source', meta?: string) => void;
+  monthlyTarget: number;
+  onDrillDown: (
+    type: 'leads' | 'qualified' | 'converted' | 'unqualified' | 'source',
+    meta?: string
+  ) => void;
 }
 
 export const LeadAnalyticsSection: React.FC<LeadAnalyticsSectionProps> = ({
@@ -35,12 +40,13 @@ export const LeadAnalyticsSection: React.FC<LeadAnalyticsSectionProps> = ({
   monthlyTarget,
   onDrillDown,
 }) => {
-  // Target achievement calculations dynamically driven by context/settings!
-  const target = monthlyTarget && monthlyTarget > 0 ? monthlyTarget : MONTHLY_TARGET;
-  const achieved = currentKpi.totalCollected;
-  const remaining = Math.max(0, target - achieved);
-  const achievedPct = target > 0 ? Number(((achieved / target) * 100).toFixed(1)) : 0;
-  const remainingPct = Math.max(0, Number((100 - achievedPct).toFixed(1)));
+  // Single source of truth calculation for Target Achievement
+  const effectiveTarget =
+    monthlyTarget !== undefined && monthlyTarget !== null
+      ? monthlyTarget
+      : DEFAULT_MONTHLY_TARGET;
+
+  const targetStats = calculateTargetAchievement(currentKpi.totalCollected, effectiveTarget);
 
   // Funnel numbers
   const newLeads = currentKpi.newLeads;
@@ -48,90 +54,136 @@ export const LeadAnalyticsSection: React.FC<LeadAnalyticsSectionProps> = ({
   const converted = currentKpi.convertedLeads;
   const unqualified = currentKpi.unqualifiedLeads;
 
-  const qualifiedPct = newLeads > 0 ? ((qualified / newLeads) * 100).toFixed(1) : '0';
-  const convertedPct = newLeads > 0 ? ((converted / newLeads) * 100).toFixed(1) : '0';
-  const unqualifiedPct = newLeads > 0 ? ((unqualified / newLeads) * 100).toFixed(1) : '0';
+  const qualifiedPct = newLeads > 0 ? ((qualified / newLeads) * 100).toFixed(1) : '0.0';
+  const convertedPct = newLeads > 0 ? ((converted / newLeads) * 100).toFixed(1) : '0.0';
+  const unqualifiedPct = newLeads > 0 ? ((unqualified / newLeads) * 100).toFixed(1) : '0.0';
 
   const totalSources = leadSources.reduce((sum, s) => sum + s.count, 0);
 
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
       {/* 1. Target Achievement Card */}
-      <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+      <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
         <div>
-          <div className="flex items-center justify-between text-xs font-bold text-[#0F172A]">
+          <div className="flex items-center justify-between text-xs font-bold text-[#172554]">
             <div className="flex items-center gap-1.5">
               <Target className="h-4 w-4 text-[#2563EB]" />
               <span>Target Achievement</span>
             </div>
-            <a
-              href="/app/settings"
-              className="text-[10px] text-blue-600 hover:text-blue-800 font-semibold"
+            <Link
+              to="/app/settings"
+              className="text-[10px] text-[#2563EB] hover:text-[#1D4ED8] font-bold"
             >
               Configure
-            </a>
+            </Link>
           </div>
 
-          <div className="mt-4">
-            <span className="text-[11px] font-medium text-[#64748B]">Monthly Revenue Target</span>
-            <div className="text-2xl font-bold tracking-tight text-[#0F172A]">
-              {formatINR(target)}
+          <div className="mt-3.5">
+            <span className="text-[11px] font-semibold text-[#64748B]">Monthly Revenue Target</span>
+            <div className="text-2xl font-black tracking-tight text-[#172554]">
+              {targetStats.isConfigured ? formatINR(targetStats.monthlyTarget) : 'Target Not Configured'}
             </div>
           </div>
 
-          <div className="mt-3 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-[#64748B]">Achieved</span>
-              <span className="font-semibold text-[#0F172A]">{formatINR(achieved)}</span>
+          <div className="mt-3 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-[#10B981]" />
+                <span className="text-[#64748B] font-medium">Collected Revenue</span>
+              </div>
+              <span className="font-bold text-[#172554]">{formatINR(targetStats.actualRevenue)}</span>
             </div>
-            <span className="font-medium text-[#64748B]">{achievedPct.toFixed(1)}%</span>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-[#2563EB]" />
+                <span className="text-[#64748B] font-medium">Target Achievement</span>
+              </div>
+              <span className="font-extrabold text-[#2563EB]">
+                {targetStats.isConfigured ? `${targetStats.achievementPercentage}%` : 'N/A'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-[#94A3B8]" />
+                <span className="text-[#64748B] font-medium">
+                  {targetStats.isExceeded ? 'Exceeded by' : 'Remaining Target'}
+                </span>
+              </div>
+              <span className="font-semibold text-[#64748B]">
+                {targetStats.isExceeded
+                  ? formatINR(targetStats.actualRevenue - targetStats.monthlyTarget)
+                  : formatINR(targetStats.remainingAmount)}
+              </span>
+            </div>
           </div>
 
-          <div className="mt-1 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-slate-400" />
-              <span className="text-[#64748B]">Remaining</span>
-              <span className="font-semibold text-[#0F172A]">{formatINR(remaining)}</span>
-            </div>
-            <span className="font-medium text-[#64748B]">{remainingPct.toFixed(1)}%</span>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
+          {/* Accessible Dynamic Progress Bar */}
+          <div className="mt-3">
             <div
-              className="h-full rounded-full bg-[#10B981] transition-all duration-500"
-              style={{ width: `${Math.min(100, achievedPct)}%` }}
-            />
+              className="h-2 w-full overflow-hidden rounded-full bg-[#EAF2FF]"
+              role="progressbar"
+              aria-valuenow={targetStats.achievementPercentage}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Monthly Revenue Target Progress"
+            >
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  targetStats.isExceeded ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-[#10B981]'
+                }`}
+                style={{ width: `${Math.min(100, Math.max(0, targetStats.achievementPercentage))}%` }}
+              />
+            </div>
+            <div className="mt-1 flex justify-between text-[10px] text-[#64748B] font-semibold">
+              <span>0%</span>
+              <span>Progress: {targetStats.achievementPercentage}%</span>
+              <span>100%</span>
+            </div>
           </div>
         </div>
 
-        {/* Funnel visualization on right / bottom */}
+        {/* Funnel visual indicator */}
         <div className="mt-4 border-t border-[#F1F5F9] pt-3">
-          <div className="text-center text-[10px] font-semibold text-[#64748B]">
-            Target vs Achieved (Revenue)
+          <div className="flex items-center justify-between text-[10px] font-bold text-[#64748B]">
+            <span>Cash Collection Pacing</span>
+            <span
+              className={`font-extrabold ${
+                targetStats.achievementPercentage >= 50
+                  ? 'text-emerald-600'
+                  : 'text-[#2563EB]'
+              }`}
+            >
+              {targetStats.isExceeded ? 'Target Surpassed' : `${targetStats.remainingPercentage}% left`}
+            </span>
           </div>
-          <div className="mt-2 flex h-24 items-center justify-center">
-            {/* Geometric stylized funnel matching screenshot */}
+          <div className="mt-2 flex h-20 items-center justify-center">
             <div className="relative flex w-36 flex-col items-center">
-              {/* Upper trapezoid: Remaining */}
+              {/* Top: Remaining / Capacity */}
               <div
-                className="relative flex h-14 w-full items-center justify-center bg-[#3B82F6] text-white shadow-xs"
+                className="relative flex h-11 w-full items-center justify-center bg-[#3B82F6] text-white shadow-xs rounded-t"
                 style={{ clipPath: 'polygon(0 0, 100% 0, 80% 100%, 20% 100%)' }}
               >
                 <div className="text-center">
-                  <div className="text-[9px] font-semibold opacity-90">Remaining</div>
-                  <div className="text-[10px] font-bold">{remainingPct.toFixed(1)}%</div>
+                  <div className="text-[9px] font-medium opacity-90">
+                    {targetStats.isExceeded ? 'Surplus' : 'Remaining'}
+                  </div>
+                  <div className="text-[10px] font-bold">
+                    {targetStats.isExceeded
+                      ? `+${(targetStats.achievementPercentage - 100).toFixed(1)}%`
+                      : `${targetStats.remainingPercentage}%`}
+                  </div>
                 </div>
               </div>
-              {/* Lower trapezoid: Achieved */}
+              {/* Bottom: Realized Collections */}
               <div
-                className="relative -mt-0.5 flex h-8 w-[72%] items-center justify-center bg-[#1D4ED8] text-white"
+                className="relative -mt-0.5 flex h-9 w-[75%] items-center justify-center bg-[#1D4ED8] text-white rounded-b"
                 style={{ clipPath: 'polygon(0 0, 100% 0, 75% 100%, 25% 100%)' }}
               >
                 <div className="text-center">
-                  <div className="text-[8px] font-semibold opacity-90">Achieved</div>
-                  <div className="text-[9px] font-bold">{achievedPct.toFixed(1)}%</div>
+                  <div className="text-[8px] font-medium opacity-90">Realized</div>
+                  <div className="text-[9px] font-extrabold">{targetStats.achievementPercentage}%</div>
                 </div>
               </div>
             </div>
@@ -139,188 +191,138 @@ export const LeadAnalyticsSection: React.FC<LeadAnalyticsSectionProps> = ({
         </div>
       </div>
 
-      {/* 2. Lead Funnel */}
-      <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
-        <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-[#0F172A]">Lead Funnel</div>
-          <span className="text-[10px] text-[#64748B]">Conversion Flow</span>
-        </div>
+      {/* 2. Lead Conversion Funnel */}
+      <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
+        <div>
+          <div className="flex items-center justify-between text-xs font-bold text-[#172554]">
+            <div className="flex items-center gap-1.5">
+              <Filter className="h-4 w-4 text-[#2563EB]" />
+              <span>Lead Qualification Funnel</span>
+            </div>
+            <button
+              onClick={() => onDrillDown('leads')}
+              className="text-[10px] text-[#2563EB] hover:text-[#1D4ED8] font-bold"
+            >
+              All Leads
+            </button>
+          </div>
+          <p className="mt-1 text-[11px] text-[#64748B]">Pipeline conversion breakdown</p>
 
-        <div className="relative my-auto flex items-center justify-center py-2">
-          {/* Main Funnel Stages */}
-          <div className="flex w-44 flex-col items-center gap-1">
-            {/* Stage 1: New Leads */}
+          <div className="mt-3.5 space-y-2.5">
+            {/* Stage 1: Inbound */}
             <div
               onClick={() => onDrillDown('leads')}
-              className="flex h-11 w-full cursor-pointer flex-col items-center justify-center bg-[#2563EB] text-white shadow-xs transition-transform hover:scale-102"
-              style={{ clipPath: 'polygon(0 0, 100% 0, 84% 100%, 16% 100%)' }}
-              title="Click to view all New Leads"
+              className="group cursor-pointer rounded-lg border border-[#DCE6F5] bg-[#F8FAFC] p-2 hover:bg-[#EFF6FF] hover:border-[#BFDBFE] transition-colors"
             >
-              <span className="text-[10px] font-medium leading-none">New Leads</span>
-              <span className="text-xs font-bold leading-tight">
-                {newLeads} <span className="text-[10px] font-normal opacity-90">(100%)</span>
-              </span>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#172554]">1. Inbound Leads</span>
+                <span className="font-bold text-[#172554]">{newLeads}</span>
+              </div>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
+                <div className="h-full bg-blue-600 rounded-full" style={{ width: '100%' }} />
+              </div>
             </div>
 
             {/* Stage 2: Qualified */}
             <div
               onClick={() => onDrillDown('qualified')}
-              className="flex h-11 w-[78%] cursor-pointer flex-col items-center justify-center bg-[#10B981] text-white shadow-xs transition-transform hover:scale-102"
-              style={{ clipPath: 'polygon(0 0, 100% 0, 80% 100%, 20% 100%)' }}
-              title="Click to view Qualified Leads"
+              className="group cursor-pointer rounded-lg border border-[#DCE6F5] bg-[#F8FAFC] p-2 hover:bg-[#ECFDF5] hover:border-emerald-200 transition-colors"
             >
-              <span className="text-[10px] font-medium leading-none">Qualified</span>
-              <span className="text-xs font-bold leading-tight">
-                {qualified} <span className="text-[10px] font-normal opacity-90">({qualifiedPct}%)</span>
-              </span>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#172554]">2. Qualified Prospects</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-emerald-600">({qualifiedPct}%)</span>
+                  <span className="font-bold text-[#172554]">{qualified}</span>
+                </div>
+              </div>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
+                <div
+                  className="h-full bg-emerald-500 rounded-full"
+                  style={{ width: `${Math.min(100, Number(qualifiedPct))}%` }}
+                />
+              </div>
             </div>
 
             {/* Stage 3: Converted */}
             <div
               onClick={() => onDrillDown('converted')}
-              className="flex h-10 w-[58%] cursor-pointer flex-col items-center justify-center bg-[#F59E0B] text-white shadow-xs transition-transform hover:scale-102"
-              style={{ clipPath: 'polygon(0 0, 100% 0, 75% 100%, 25% 100%)' }}
-              title="Click to view Converted Leads"
+              className="group cursor-pointer rounded-lg border border-[#DCE6F5] bg-[#F8FAFC] p-2 hover:bg-[#FAF5FF] hover:border-purple-200 transition-colors"
             >
-              <span className="text-[10px] font-medium leading-none">Converted</span>
-              <span className="text-xs font-bold leading-tight">
-                {converted} <span className="text-[10px] font-normal opacity-90">({convertedPct}%)</span>
-              </span>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#172554]">3. Converted to Deals</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-purple-600">({convertedPct}%)</span>
+                  <span className="font-bold text-[#172554]">{converted}</span>
+                </div>
+              </div>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
+                <div
+                  className="h-full bg-purple-600 rounded-full"
+                  style={{ width: `${Math.min(100, Number(convertedPct))}%` }}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Off to the right: Unqualified Callout */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            {/* Stage 4: Unqualified */}
             <div
               onClick={() => onDrillDown('unqualified')}
-              className="flex cursor-pointer flex-col items-center rounded-lg border border-dashed border-[#C084FC] bg-[#F5F3FF] p-2 text-center transition-all hover:bg-[#EDE9FE]"
-              title="Click to view Unqualified Leads"
+              className="group cursor-pointer rounded-lg border border-[#DCE6F5] bg-[#F8FAFC] p-2 hover:bg-[#FFF1F2] hover:border-rose-200 transition-colors"
             >
-              <span className="text-[10px] font-semibold text-[#8B5CF6]">Unqualified</span>
-              <span className="text-xs font-bold text-[#6D28D9]">{unqualified}</span>
-              <span className="text-[9px] text-[#A855F7]">({unqualifiedPct}%)</span>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-[#172554]">4. Unqualified / Dropped</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-rose-600">({unqualifiedPct}%)</span>
+                  <span className="font-bold text-[#172554]">{unqualified}</span>
+                </div>
+              </div>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
+                <div
+                  className="h-full bg-rose-500 rounded-full"
+                  style={{ width: `${Math.min(100, Number(unqualifiedPct))}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="text-center text-[10px] text-[#94A3B8]">
-          Click stages to inspect lead cohort
+        <div className="mt-3 border-t border-[#F1F5F9] pt-2 text-center text-[10px] text-[#64748B]">
+          Effective Win Rate:{' '}
+          <strong className="text-[#2563EB] font-bold">{currentKpi.conversionRate}%</strong>
         </div>
       </div>
 
-      {/* 3. Daily Lead Trend */}
-      <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
-        <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-[#0F172A]">Daily Lead Trend</div>
-          <div className="flex items-center gap-2 text-[10px]">
-            <span className="flex items-center gap-1 font-medium text-[#2563EB]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" /> New Leads
-            </span>
-            <span className="flex items-center gap-1 font-medium text-[#10B981]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" /> Qualified
-            </span>
-            <span className="flex items-center gap-1 font-medium text-[#F59E0B]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" /> Converted
-            </span>
+      {/* 3. Lead Sources Distribution (Donut Pie) */}
+      <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
+        <div>
+          <div className="flex items-center justify-between text-xs font-bold text-[#172554]">
+            <span>Lead Source Channels</span>
+            <span className="text-[10px] text-[#64748B] font-semibold">{totalSources} Total</span>
           </div>
-        </div>
+          <p className="mt-1 text-[11px] text-[#64748B]">Acquisition attribution</p>
 
-        <div className="my-auto h-48 w-full pt-2">
-          {dailyLeadTrend.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-xs text-[#94A3B8]">
-              No trend data for selected range
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dailyLeadTrend} margin={{ top: 8, right: 8, left: -22, bottom: 0 }}>
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 9, fill: '#64748B' }}
-                  tickLine={false}
-                  axisLine={{ stroke: '#E2E8F0' }}
-                  interval={Math.ceil(dailyLeadTrend.length / 7)}
-                />
-                <YAxis
-                  tick={{ fontSize: 9, fill: '#64748B' }}
-                  tickLine={false}
-                  axisLine={{ stroke: '#E2E8F0' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0F172A',
-                    borderRadius: '8px',
-                    color: '#fff',
-                    fontSize: '11px',
-                    border: 'none',
-                  }}
-                  itemStyle={{ padding: '1px 0' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="newLeads"
-                  name="New Leads"
-                  stroke="#2563EB"
-                  strokeWidth={2}
-                  dot={{ r: 2, fill: '#2563EB' }}
-                  activeDot={{ r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="qualified"
-                  name="Qualified"
-                  stroke="#10B981"
-                  strokeWidth={2}
-                  dot={{ r: 2, fill: '#10B981' }}
-                  activeDot={{ r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="converted"
-                  name="Converted"
-                  stroke="#F59E0B"
-                  strokeWidth={2}
-                  dot={{ r: 2, fill: '#F59E0B' }}
-                  activeDot={{ r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-
-      {/* 4. Lead Sources Donut Chart */}
-      <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
-        <div className="text-xs font-bold text-[#0F172A]">Lead Sources</div>
-
-        <div className="my-auto flex items-center justify-between gap-2">
-          {/* Donut Chart with center label */}
-          <div className="relative h-40 w-40 shrink-0">
+          <div className="h-44 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={leadSources}
                   dataKey="count"
-                  nameKey="name"
+                  nameKey="source"
                   cx="50%"
                   cy="50%"
-                  innerRadius={42}
-                  outerRadius={65}
-                  stroke="#fff"
-                  strokeWidth={2}
-                  onClick={(entry) => onDrillDown('source', entry.name)}
+                  innerRadius={36}
+                  outerRadius={58}
+                  paddingAngle={3}
+                  onClick={(entry) => onDrillDown('source', entry.source)}
+                  className="cursor-pointer"
                 >
-                  {leadSources.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color}
-                      className="cursor-pointer transition-opacity hover:opacity-80"
-                    />
+                  {leadSources.map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip
                   formatter={(val: any, name: any) => [`${val} leads`, name]}
                   contentStyle={{
-                    backgroundColor: '#0F172A',
+                    backgroundColor: '#071426',
                     borderRadius: '8px',
                     color: '#fff',
                     fontSize: '11px',
@@ -329,45 +331,90 @@ export const LeadAnalyticsSection: React.FC<LeadAnalyticsSectionProps> = ({
                 />
               </PieChart>
             </ResponsiveContainer>
-            {/* Center label */}
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-base font-bold leading-none text-[#0F172A]">
-                {totalSources}
-              </span>
-              <span className="text-[9px] font-semibold uppercase tracking-wider text-[#94A3B8]">
-                Total Leads
-              </span>
-            </div>
-          </div>
-
-          {/* Right Legend */}
-          <div className="flex flex-col gap-1.5 text-xs">
-            {leadSources.map((source) => (
-              <div
-                key={source.name}
-                onClick={() => onDrillDown('source', source.name)}
-                className="flex cursor-pointer items-center justify-between gap-3 rounded p-1 hover:bg-[#F8FAFC]"
-              >
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="h-2 w-2 rounded-full shrink-0"
-                    style={{ backgroundColor: source.color }}
-                  />
-                  <span className="text-xs text-[#475569]">{source.name}</span>
-                </div>
-                <div className="text-right text-xs font-semibold text-[#0F172A]">
-                  {source.count}{' '}
-                  <span className="text-[10px] font-normal text-[#94A3B8]">
-                    ({source.percentage}%)
-                  </span>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 
-        <div className="text-center text-[10px] text-[#94A3B8]">
-          Click slice or item to filter leads
+        <div className="grid grid-cols-2 gap-1.5 border-t border-[#F1F5F9] pt-2.5 text-[10px]">
+          {leadSources.slice(0, 4).map((s) => (
+            <div
+              key={s.source}
+              onClick={() => onDrillDown('source', s.source)}
+              className="flex items-center justify-between p-1 rounded hover:bg-[#F8FAFC] cursor-pointer"
+            >
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                <span className="text-[#475569] truncate">{s.source}</span>
+              </div>
+              <span className="font-bold text-[#172554]">{s.count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 4. Daily Lead Creation Trend */}
+      <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
+        <div>
+          <div className="flex items-center justify-between text-xs font-bold text-[#172554]">
+            <span>Daily Lead Creation Velocity</span>
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="flex items-center gap-1 text-[#2563EB] font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" /> Total
+              </span>
+              <span className="flex items-center gap-1 text-[#10B981] font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" /> Qualified
+              </span>
+            </div>
+          </div>
+          <p className="mt-1 text-[11px] text-[#64748B]">Velocity over selected reporting period</p>
+
+          <div className="h-44 w-full pt-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dailyLeadTrend} margin={{ top: 10, right: 8, left: -24, bottom: 0 }}>
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 9, fill: '#64748B' }}
+                  tickLine={false}
+                  axisLine={{ stroke: '#DCE6F5' }}
+                  interval={Math.ceil(dailyLeadTrend.length / 5)}
+                />
+                <YAxis
+                  tick={{ fontSize: 9, fill: '#64748B' }}
+                  tickLine={false}
+                  axisLine={{ stroke: '#DCE6F5' }}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#071426',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '11px',
+                    border: 'none',
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="newLeads"
+                  name="Total Leads"
+                  stroke="#2563EB"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="qualified"
+                  name="Qualified"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="mt-3 border-t border-[#F1F5F9] pt-2 text-center text-[10px] text-[#64748B]">
+          Daily intake pacing & discovery rate
         </div>
       </div>
     </div>

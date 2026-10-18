@@ -122,6 +122,8 @@ export interface UserPreferences {
   monthlyTarget: number;
   currency: string;
   dateFormat: string;
+  defaultDatePreset?: DateRangePreset;
+  defaultEmployeeFilter?: string;
   notificationsEnabled: boolean;
   activeUserId: string;
 }

@@ -17,7 +17,7 @@ interface HeaderProps {
   onFilterChange: (newFilters: Partial<FilterState>) => void;
   onOpenCustomDateModal: () => void;
   onOpenSearchModal: () => void;
-  onExport: (type: 'summary' | 'leads' | 'quotations' | 'deals' | 'orders' | 'payments') => void;
+  onExport: (type: 'summary' | 'leads' | 'quotations' | 'deals' | 'orders' | 'payments' | 'invoices') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -57,17 +57,17 @@ export const Header: React.FC<HeaderProps> = ({
       onFilterChange({
         dateRange: {
           preset: 'today',
-          startDate: '2026-10-16',
-          endDate: '2026-10-16',
-          label: 'Today (Oct 16, 2026)',
+          startDate: '2026-10-17',
+          endDate: '2026-10-17',
+          label: 'Today (Oct 17, 2026)',
         },
       });
     } else if (preset === 'last7') {
       onFilterChange({
         dateRange: {
           preset: 'last7',
-          startDate: '2026-10-10',
-          endDate: '2026-10-16',
+          startDate: '2026-10-11',
+          endDate: '2026-10-17',
           label: 'Last 7 Days',
         },
       });
@@ -75,8 +75,8 @@ export const Header: React.FC<HeaderProps> = ({
       onFilterChange({
         dateRange: {
           preset: 'last30',
-          startDate: '2026-09-17',
-          endDate: '2026-10-16',
+          startDate: '2026-09-18',
+          endDate: '2026-10-17',
           label: 'Last 30 Days',
         },
       });
@@ -189,7 +189,18 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative">
           <select
             value={filters.userId}
-            onChange={(e) => onFilterChange({ userId: e.target.value })}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === 'all') {
+                onFilterChange({ userId: 'all' });
+              } else {
+                const u = USERS.find((user) => user.id === val);
+                onFilterChange({
+                  userId: val,
+                  department: u ? u.department : filters.department,
+                });
+              }
+            }}
             className="appearance-none rounded-lg border border-[#CBD5E1] bg-white pl-3 pr-8 py-1.5 text-xs font-medium text-[#0F172A] shadow-xs hover:border-[#94A3B8] focus:border-[#2563EB] focus:outline-hidden cursor-pointer"
           >
             <option value="all">All Users</option>
@@ -222,7 +233,15 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative">
           <select
             value={filters.department}
-            onChange={(e) => onFilterChange({ department: e.target.value })}
+            onChange={(e) => {
+              const newDept = e.target.value;
+              const curUser = USERS.find((u) => u.id === filters.userId);
+              if (curUser && newDept !== 'all' && curUser.department !== newDept) {
+                onFilterChange({ department: newDept, userId: 'all' });
+              } else {
+                onFilterChange({ department: newDept });
+              }
+            }}
             className="appearance-none rounded-lg border border-[#CBD5E1] bg-white pl-3 pr-8 py-1.5 text-xs font-medium text-[#0F172A] shadow-xs hover:border-[#94A3B8] focus:border-[#2563EB] focus:outline-hidden cursor-pointer"
           >
             <option value="all">All Departments</option>
@@ -298,6 +317,16 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <FileSpreadsheet className="h-3.5 w-3.5 text-[#F59E0B]" />
                 <span>Export Orders (CSV)</span>
+              </button>
+              <button
+                onClick={() => {
+                  setIsExportOpen(false);
+                  onExport('invoices');
+                }}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-medium text-[#1E293B] hover:bg-[#F1F5F9]"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5 text-[#059669]" />
+                <span>Export Tax Invoices (CSV)</span>
               </button>
               <button
                 onClick={() => {

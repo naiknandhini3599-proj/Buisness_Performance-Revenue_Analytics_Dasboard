@@ -33,10 +33,14 @@ export function parseDate(dateStr: string): Date {
 /**
  * Calculates start and end for the immediately preceding equivalent period.
  */
-export function getPreviousPeriodRange(range: DateFilterRange): { startDate: string; endDate: string; days: number } {
+export function getPreviousPeriodRange(range: DateFilterRange): {
+  startDate: string;
+  endDate: string;
+  days: number;
+} {
   const start = new Date(range.startDate);
   const end = new Date(range.endDate);
-  
+
   const diffTime = Math.abs(end.getTime() - start.getTime());
   const diffDays = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1);
 
@@ -53,7 +57,11 @@ export function getPreviousPeriodRange(range: DateFilterRange): { startDate: str
   };
 }
 
-export function isWithinDateRange(dateStr: string, startDateStr: string, endDateStr: string): boolean {
+export function isWithinDateRange(
+  dateStr: string,
+  startDateStr: string,
+  endDateStr: string
+): boolean {
   if (!dateStr) return false;
   const d = dateStr.split('T')[0];
   return d >= startDateStr && d <= endDateStr;
@@ -80,8 +88,63 @@ export function filterRecords(
 
   const targetUser = userId !== 'all' ? USERS.find((u) => u.id === userId) : null;
 
-  // 1. Filter Orders first so we have the set of operational orders for attribution
+  // 1. Date Filtered Base Records
+  const dateLeads = leads.filter((l) => isWithinDateRange(l.createdAt, startDate, endDate));
+  const dateQuotations = quotations.filter((q) => isWithinDateRange(q.createdAt, startDate, endDate));
+  const dateDeals = deals.filter((d) => isWithinDateRange(d.createdAt, startDate, endDate));
   const dateOrders = orders.filter((o) => isWithinDateRange(o.createdAt, startDate, endDate));
+  const dateInvoices = invoices.filter((i) => isWithinDateRange(i.issueDate, startDate, endDate));
+  const datePayments = payments.filter((p) => isWithinDateRange(p.paymentDate, startDate, endDate));
+
+  // If no user or department filter is active, return all date-matched records
+  if (userId === 'all' && department === 'all') {
+    const filteredActivities = activities.filter((a) =>
+      isWithinDateRange(a.timestamp, startDate, endDate)
+    );
+    return {
+      filteredLeads: dateLeads,
+      filteredQuotations: dateQuotations,
+      filteredDeals: dateDeals,
+      filteredOrders: dateOrders,
+      filteredInvoices: dateInvoices,
+      filteredPayments: datePayments,
+      filteredActivities,
+    };
+  }
+
+  // Pre-calculate relationships for connected employee attribution:
+  // For Operations specialists:
+  const userOpsOrderIds = new Set(
+    orders.filter((o) => o.assignedOpsId === userId).map((o) => o.id)
+  );
+  const userOpsOrderDealIds = new Set(
+    orders.filter((o) => o.assignedOpsId === userId).map((o) => o.dealId)
+  );
+  const userOpsOrderLeadIds = new Set(
+    orders.filter((o) => o.assignedOpsId === userId).map((o) => o.leadId)
+  );
+  const userOpsDealQuoteIds = new Set(
+    deals.filter((d) => userOpsOrderDealIds.has(d.id)).flatMap((d) => d.quotationIds || [])
+  );
+
+  // For Finance controller:
+  const userFinanceInvoiceIds = new Set(
+    invoices.filter((i) => i.assignedFinanceId === userId).map((i) => i.id)
+  );
+  const userFinanceDealIds = new Set(
+    invoices.filter((i) => i.assignedFinanceId === userId).map((i) => i.dealId)
+  );
+  const userFinanceOrderIds = new Set(
+    invoices.filter((i) => i.assignedFinanceId === userId && i.orderId).map((i) => i.orderId!)
+  );
+  const userFinanceLeadIds = new Set(
+    deals.filter((d) => userFinanceDealIds.has(d.id)).map((d) => d.leadId)
+  );
+  const userFinanceDealQuoteIds = new Set(
+    deals.filter((d) => userFinanceDealIds.has(d.id)).flatMap((d) => d.quotationIds || [])
+  );
+
+  // Filter Orders
   const filteredOrders = dateOrders.filter((o) => {
     if (userId !== 'all') {
       if (targetUser?.department === 'Operations') {
@@ -91,7 +154,7 @@ export function filterRecords(
         return o.assignedSalesId === userId;
       }
       if (targetUser?.department === 'Finance') {
-        return true;
+        return userFinanceOrderIds.has(o.id) || userFinanceDealIds.has(o.dealId);
       }
       return o.assignedOpsId === userId || o.assignedSalesId === userId;
     }
@@ -111,85 +174,17 @@ export function filterRecords(
     return true;
   });
 
-  const opsOrderDealIds = new Set(filteredOrders.map((o) => o.dealId));
-  const opsOrderLeadIds = new Set(filteredOrders.map((o) => o.leadId));
-  const opsOrderIds = new Set(filteredOrders.map((o) => o.id));
-
-  // 2. Filter Invoices
-  const dateInvoices = invoices.filter((i) => isWithinDateRange(i.issueDate, startDate, endDate));
-  const filteredInvoices = dateInvoices.filter((i) => {
-    if (userId !== 'all') {
-      if (targetUser?.department === 'Sales') {
-        return i.assignedSalesId === userId;
-      }
-      if (targetUser?.department === 'Operations') {
-        return i.assignedOpsId === userId || (i.orderId && opsOrderIds.has(i.orderId)) || opsOrderDealIds.has(i.dealId);
-      }
-      if (targetUser?.department === 'Finance') {
-        return i.assignedFinanceId === userId || true;
-      }
-      return i.assignedSalesId === userId;
-    }
-    if (department !== 'all') {
-      if (department === 'Sales') {
-        const rep = USERS.find((u) => u.id === i.assignedSalesId);
-        return rep?.department === 'Sales';
-      }
-      if (department === 'Operations') {
-        return (i.orderId && opsOrderIds.has(i.orderId)) || opsOrderDealIds.has(i.dealId);
-      }
-      if (department === 'Finance') {
-        return true;
-      }
-    }
-    return true;
-  });
-
-  const financeDealIds = new Set(filteredInvoices.map((i) => i.dealId));
-  const financeLeadIds = new Set(filteredInvoices.map((i) => i.leadId));
-
-  // 3. Filter Payments
-  const datePayments = payments.filter((p) => isWithinDateRange(p.paymentDate, startDate, endDate));
-  const filteredPayments = datePayments.filter((p) => {
-    if (userId !== 'all') {
-      if (targetUser?.department === 'Sales') {
-        return p.assignedSalesId === userId;
-      }
-      if (targetUser?.department === 'Operations') {
-        return p.assignedOpsId === userId || (p.orderId && opsOrderIds.has(p.orderId)) || opsOrderDealIds.has(p.dealId);
-      }
-      if (targetUser?.department === 'Finance') {
-        return p.assignedFinanceId === userId || true;
-      }
-      return p.assignedSalesId === userId;
-    }
-    if (department !== 'all') {
-      if (department === 'Sales') {
-        const rep = USERS.find((u) => u.id === p.assignedSalesId);
-        return rep?.department === 'Sales';
-      }
-      if (department === 'Operations') {
-        return (p.orderId && opsOrderIds.has(p.orderId)) || opsOrderDealIds.has(p.dealId);
-      }
-      if (department === 'Finance') {
-        return true;
-      }
-    }
-    return true;
-  });
-
-  // 4. Filter Deals
-  const dateDeals = deals.filter((d) => isWithinDateRange(d.createdAt, startDate, endDate));
+  // Filter Deals
   const filteredDeals = dateDeals.filter((d) => {
     if (userId !== 'all') {
       if (targetUser?.department === 'Sales') {
         return d.assignedSalesId === userId;
       }
       if (targetUser?.department === 'Operations') {
-        return opsOrderDealIds.has(d.id) || d.assignedSalesId === userId;
+        return userOpsOrderDealIds.has(d.id) || d.assignedSalesId === userId;
       }
       if (targetUser?.department === 'Finance') {
-        return financeDealIds.has(d.id) || true;
+        return userFinanceDealIds.has(d.id);
       }
       return d.assignedSalesId === userId;
     }
@@ -199,30 +194,32 @@ export function filterRecords(
         return rep?.department === 'Sales';
       }
       if (department === 'Operations') {
-        return opsOrderDealIds.has(d.id);
+        const hasOpsOrder = orders.some(
+          (o) => o.dealId === d.id && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'
+        );
+        return hasOpsOrder;
       }
       if (department === 'Finance') {
-        return financeDealIds.has(d.id);
+        const hasFinInv = invoices.some(
+          (i) => i.dealId === d.id && USERS.find((u) => u.id === i.assignedFinanceId)?.department === 'Finance'
+        );
+        return hasFinInv;
       }
     }
     return true;
   });
 
-  const activeDealQuoteIds = new Set(filteredDeals.flatMap((d) => d.quotationIds || []));
-  const activeDealLeadIds = new Set(filteredDeals.map((d) => d.leadId));
-
-  // 5. Filter Quotations
-  const dateQuotations = quotations.filter((q) => isWithinDateRange(q.createdAt, startDate, endDate));
+  // Filter Quotations
   const filteredQuotations = dateQuotations.filter((q) => {
     if (userId !== 'all') {
       if (targetUser?.department === 'Sales') {
         return q.assignedSalesId === userId;
       }
       if (targetUser?.department === 'Operations') {
-        return activeDealQuoteIds.has(q.id) || q.assignedSalesId === userId;
+        return userOpsDealQuoteIds.has(q.id) || q.assignedSalesId === userId;
       }
       if (targetUser?.department === 'Finance') {
-        return activeDealQuoteIds.has(q.id) || true;
+        return userFinanceDealQuoteIds.has(q.id);
       }
       return q.assignedSalesId === userId;
     }
@@ -232,27 +229,30 @@ export function filterRecords(
         return rep?.department === 'Sales';
       }
       if (department === 'Operations') {
-        return activeDealQuoteIds.has(q.id);
+        return orders.some(
+          (o) => o.dealId === q.dealId && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'
+        );
       }
       if (department === 'Finance') {
-        return activeDealQuoteIds.has(q.id);
+        return invoices.some(
+          (i) => i.dealId === q.dealId && USERS.find((u) => u.id === i.assignedFinanceId)?.department === 'Finance'
+        );
       }
     }
     return true;
   });
 
-  // 6. Filter Leads
-  const dateLeads = leads.filter((l) => isWithinDateRange(l.createdAt, startDate, endDate));
+  // Filter Leads
   const filteredLeads = dateLeads.filter((l) => {
     if (userId !== 'all') {
       if (targetUser?.department === 'Sales') {
         return l.assignedSalesId === userId;
       }
       if (targetUser?.department === 'Operations') {
-        return opsOrderLeadIds.has(l.id) || activeDealLeadIds.has(l.id) || l.assignedSalesId === userId;
+        return userOpsOrderLeadIds.has(l.id) || l.assignedSalesId === userId;
       }
       if (targetUser?.department === 'Finance') {
-        return financeLeadIds.has(l.id) || activeDealLeadIds.has(l.id) || true;
+        return userFinanceLeadIds.has(l.id);
       }
       return l.assignedSalesId === userId;
     }
@@ -262,19 +262,95 @@ export function filterRecords(
         return rep?.department === 'Sales';
       }
       if (department === 'Operations') {
-        return opsOrderLeadIds.has(l.id) || activeDealLeadIds.has(l.id);
+        return orders.some(
+          (o) => o.leadId === l.id && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'
+        );
       }
       if (department === 'Finance') {
-        return financeLeadIds.has(l.id) || activeDealLeadIds.has(l.id);
+        return invoices.some(
+          (i) => i.leadId === l.id && USERS.find((u) => u.id === i.assignedFinanceId)?.department === 'Finance'
+        );
       }
     }
     return true;
   });
 
-  // 7. Filter Activities
+  // Filter Invoices
+  const filteredInvoices = dateInvoices.filter((i) => {
+    if (userId !== 'all') {
+      if (targetUser?.department === 'Sales') {
+        return i.assignedSalesId === userId;
+      }
+      if (targetUser?.department === 'Operations') {
+        return (
+          i.assignedOpsId === userId ||
+          (i.orderId && userOpsOrderIds.has(i.orderId)) ||
+          userOpsOrderDealIds.has(i.dealId)
+        );
+      }
+      if (targetUser?.department === 'Finance') {
+        return i.assignedFinanceId === userId;
+      }
+      return i.assignedSalesId === userId;
+    }
+    if (department !== 'all') {
+      if (department === 'Sales') {
+        const rep = USERS.find((u) => u.id === i.assignedSalesId);
+        return rep?.department === 'Sales';
+      }
+      if (department === 'Operations') {
+        const ops = USERS.find((u) => u.id === i.assignedOpsId);
+        return ops?.department === 'Operations' || (i.orderId && orders.some((o) => o.id === i.orderId && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'));
+      }
+      if (department === 'Finance') {
+        const fin = USERS.find((u) => u.id === i.assignedFinanceId);
+        return fin?.department === 'Finance';
+      }
+    }
+    return true;
+  });
+
+  // Filter Payments
+  const filteredPayments = datePayments.filter((p) => {
+    if (userId !== 'all') {
+      if (targetUser?.department === 'Sales') {
+        return p.assignedSalesId === userId;
+      }
+      if (targetUser?.department === 'Operations') {
+        return (
+          p.assignedOpsId === userId ||
+          (p.orderId && userOpsOrderIds.has(p.orderId)) ||
+          userOpsOrderDealIds.has(p.dealId)
+        );
+      }
+      if (targetUser?.department === 'Finance') {
+        return p.assignedFinanceId === userId;
+      }
+      return p.assignedSalesId === userId;
+    }
+    if (department !== 'all') {
+      if (department === 'Sales') {
+        const rep = USERS.find((u) => u.id === p.assignedSalesId);
+        return rep?.department === 'Sales';
+      }
+      if (department === 'Operations') {
+        const ops = USERS.find((u) => u.id === p.assignedOpsId);
+        return ops?.department === 'Operations' || (p.orderId && orders.some((o) => o.id === p.orderId && USERS.find((u) => u.id === o.assignedOpsId)?.department === 'Operations'));
+      }
+      if (department === 'Finance') {
+        const fin = USERS.find((u) => u.id === p.assignedFinanceId);
+        return fin?.department === 'Finance';
+      }
+    }
+    return true;
+  });
+
+  // Filter Activities
   const filteredActivities = activities.filter((a) => {
     if (!isWithinDateRange(a.timestamp, startDate, endDate)) return false;
-    if (userId !== 'all' && a.employeeId !== userId) return false;
+    if (userId !== 'all') {
+      return a.employeeId === userId;
+    }
     if (department !== 'all') {
       const user = USERS.find((u) => u.id === a.employeeId);
       if (user && user.department !== department) return false;
@@ -295,7 +371,6 @@ export function filterRecords(
 
 /**
  * Calculates raw KPI totals for a given set of filtered records
- * Fully dynamic and mathematically consistent with the underlying records.
  */
 export function calculateKpiData(
   leads: Lead[],
@@ -306,14 +381,14 @@ export function calculateKpiData(
   payments: Payment[]
 ): PeriodKpiData {
   const newLeads = leads.length;
-  const qualifiedLeads = leads.filter((l) => l.status === 'Qualified' || l.status === 'Converted').length;
+  const qualifiedLeads = leads.filter(
+    (l) => l.status === 'Qualified' || l.status === 'Converted'
+  ).length;
   const convertedLeads = leads.filter((l) => l.status === 'Converted').length;
   const unqualifiedLeads = leads.filter((l) => l.status === 'Unqualified').length;
-  
-  // Real conversion rate: Converted Leads / Total Leads (safe zero division)
-  const conversionRate = newLeads > 0 
-    ? Number(((convertedLeads / newLeads) * 100).toFixed(1))
-    : 0;
+
+  const conversionRate =
+    newLeads > 0 ? Number(((convertedLeads / newLeads) * 100).toFixed(1)) : 0;
 
   const quotationsCreated = quotations.length;
   const dealsCreated = deals.length;
@@ -321,10 +396,13 @@ export function calculateKpiData(
 
   const totalDealValue = deals.reduce((sum, d) => sum + d.amount, 0);
   const totalInvoiced = invoices.reduce((sum, i) => sum + i.invoiceAmount, 0);
-  const totalCollected = payments.filter((p) => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
-  const outstandingRevenue = totalInvoiced > 0 
-    ? Math.max(0, totalInvoiced - totalCollected)
-    : Math.max(0, totalDealValue - totalCollected);
+  const totalCollected = payments
+    .filter((p) => p.status === 'Paid')
+    .reduce((sum, p) => sum + p.amount, 0);
+  const outstandingRevenue =
+    invoices.length > 0
+      ? invoices.reduce((sum, i) => sum + i.balanceAmount, 0)
+      : Math.max(0, totalDealValue - totalCollected);
 
   return {
     newLeads,
@@ -342,87 +420,117 @@ export function calculateKpiData(
   };
 }
 
+/**
+ * Dynamic Target Achievement Calculation
+ */
+export interface TargetAchievementResult {
+  monthlyTarget: number;
+  actualRevenue: number;
+  remainingAmount: number;
+  achievementPercentage: number;
+  remainingPercentage: number;
+  isConfigured: boolean;
+  isExceeded: boolean;
+}
+
+export function calculateTargetAchievement(
+  actualRevenue: number,
+  monthlyTarget: number
+): TargetAchievementResult {
+  if (!monthlyTarget || monthlyTarget <= 0) {
+    return {
+      monthlyTarget: 0,
+      actualRevenue,
+      remainingAmount: 0,
+      achievementPercentage: 0,
+      remainingPercentage: 100,
+      isConfigured: false,
+      isExceeded: false,
+    };
+  }
+
+  const achievementPercentage = Number(((actualRevenue / monthlyTarget) * 100).toFixed(1));
+  const remainingAmount = Math.max(0, monthlyTarget - actualRevenue);
+  const remainingPercentage = Math.max(0, Number((100 - achievementPercentage).toFixed(1)));
+  const isExceeded = actualRevenue > monthlyTarget;
+
+  return {
+    monthlyTarget,
+    actualRevenue,
+    remainingAmount,
+    achievementPercentage,
+    remainingPercentage,
+    isConfigured: true,
+    isExceeded,
+  };
+}
+
 function calcDiff(curr: number, prev: number) {
   if (prev === 0) {
-    if (curr === 0) return { valueStr: '0.0%', isPositive: true, isZero: true };
-    return { valueStr: '+100%', isPositive: true, isZero: false };
+    if (curr === 0) return { valueStr: '0.0%', isPositive: false, isZero: true };
+    return { valueStr: 'New', isPositive: true, isZero: false };
   }
   const pct = ((curr - prev) / prev) * 100;
-  const isPositive = pct >= 0;
+  if (isNaN(pct) || !isFinite(pct)) return { valueStr: '0.0%', isPositive: false, isZero: true };
+  const sign = pct > 0 ? '+' : '';
   return {
-    valueStr: `${isPositive ? '+' : ''}${Math.abs(pct).toFixed(1)}%`,
-    isPositive,
+    valueStr: `${sign}${pct.toFixed(1)}%`,
+    isPositive: pct > 0,
     isZero: pct === 0,
   };
 }
 
 export function calculateComparison(
-  curr: PeriodKpiData,
-  prev: PeriodKpiData,
-  daysCount: number
+  current: PeriodKpiData,
+  previous: PeriodKpiData,
+  days: number
 ): ComparisonKpis {
   return {
-    current: curr,
-    previous: prev,
-    newLeadsDiff: calcDiff(curr.newLeads, prev.newLeads),
-    qualifiedLeadsDiff: calcDiff(curr.qualifiedLeads, prev.qualifiedLeads),
-    convertedLeadsDiff: calcDiff(curr.convertedLeads, prev.convertedLeads),
-    unqualifiedLeadsDiff: calcDiff(curr.unqualifiedLeads, prev.unqualifiedLeads),
-    conversionRateDiff: calcDiff(curr.conversionRate, prev.conversionRate),
-    quotationsDiff: calcDiff(curr.quotationsCreated, prev.quotationsCreated),
-    dealsDiff: calcDiff(curr.dealsCreated, prev.dealsCreated),
-    invoicesDiff: calcDiff(curr.invoicesGenerated, prev.invoicesGenerated),
-    periodDaysLabel: `previous ${daysCount} days`,
+    current,
+    previous,
+    newLeadsDiff: calcDiff(current.newLeads, previous.newLeads),
+    qualifiedLeadsDiff: calcDiff(current.qualifiedLeads, previous.qualifiedLeads),
+    convertedLeadsDiff: calcDiff(current.convertedLeads, previous.convertedLeads),
+    unqualifiedLeadsDiff: calcDiff(current.unqualifiedLeads, previous.unqualifiedLeads),
+    conversionRateDiff: calcDiff(current.conversionRate, previous.conversionRate),
+    quotationsDiff: calcDiff(current.quotationsCreated, previous.quotationsCreated),
+    dealsDiff: calcDiff(current.dealsCreated, previous.dealsCreated),
+    invoicesDiff: calcDiff(current.invoicesGenerated, previous.invoicesGenerated),
+    periodDaysLabel: `vs previous ${days} days`,
   };
 }
 
-/**
- * Aggregations for Charts
- */
+// Chart dataset generators
 
 export interface LeadSourceStat {
-  name: string;
+  source: string;
   count: number;
   percentage: number;
   color: string;
 }
 
 export function getLeadSourcesData(leads: Lead[]): LeadSourceStat[] {
-  const total = leads.length || 1;
-  const counts: Record<string, number> = {
-    'Google Ads': 0,
-    Website: 0,
-    Referral: 0,
-    'Social Media': 0,
-    Other: 0,
-    'Just Dial': 0,
-  };
-
+  const counts: Record<string, number> = {};
   leads.forEach((l) => {
-    if (counts[l.source] !== undefined) {
-      counts[l.source]++;
-    } else {
-      counts['Other']++;
-    }
+    counts[l.source] = (counts[l.source] || 0) + 1;
   });
 
+  const total = leads.length;
   const colors: Record<string, string> = {
     'Google Ads': '#2563EB',
-    Website: '#10B981',
-    Referral: '#F59E0B',
+    'Website': '#3B82F6',
+    'Referral': '#10B981',
     'Social Media': '#8B5CF6',
-    Other: '#64748B',
-    'Just Dial': '#06B6D4',
+    'Just Dial': '#F59E0B',
+    'Other': '#64748B',
   };
 
-  return Object.keys(counts)
-    .filter((key) => counts[key] > 0 || key === 'Google Ads' || key === 'Website')
-    .map((key) => ({
-      name: key,
-      count: counts[key],
-      percentage: Number(((counts[key] / total) * 100).toFixed(1)),
-      color: colors[key] || '#94A3B8',
-    }));
+  return Object.entries(counts).map(([source, count]) => ({
+    source,
+    count,
+    percentage: total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0,
+    color: colors[source] || '#94A3B8',
+  }));
 }
 
 export interface DailyTrendPoint {
@@ -430,10 +538,13 @@ export interface DailyTrendPoint {
   label: string;
   newLeads: number;
   qualified: number;
-  converted: number;
 }
 
-export function getDailyLeadTrendData(leads: Lead[], startDate: string, endDate: string): DailyTrendPoint[] {
+export function getDailyLeadTrendData(
+  leads: Lead[],
+  startDate: string,
+  endDate: string
+): DailyTrendPoint[] {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const points: DailyTrendPoint[] = [];
@@ -444,16 +555,15 @@ export function getDailyLeadTrendData(leads: Lead[], startDate: string, endDate:
     const label = curr.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
     const dayLeads = leads.filter((l) => l.createdAt.startsWith(dStr));
-    const newCount = dayLeads.length;
-    const qualCount = dayLeads.filter((l) => l.status === 'Qualified' || l.status === 'Converted').length;
-    const convCount = dayLeads.filter((l) => l.status === 'Converted').length;
+    const qualified = dayLeads.filter(
+      (l) => l.status === 'Qualified' || l.status === 'Converted'
+    ).length;
 
     points.push({
       date: dStr,
       label,
-      newLeads: newCount,
-      qualified: qualCount,
-      converted: convCount,
+      newLeads: dayLeads.length,
+      qualified,
     });
 
     curr.setDate(curr.getDate() + 1);
@@ -464,45 +574,68 @@ export function getDailyLeadTrendData(leads: Lead[], startDate: string, endDate:
 
 export interface QuotationCategoryStat {
   service: string;
+  category: string;
   shortName: string;
   count: number;
+  total: number;
   amount: number;
   accepted: number;
   pending: number;
   rejected: number;
   conversionRate: number;
+  acceptanceRate: number;
 }
 
 export function getQuotationCategoryData(quotations: Quotation[]): QuotationCategoryStat[] {
-  const map = new Map<string, QuotationCategoryStat>();
+  const catMap: Record<
+    string,
+    { count: number; amount: number; accepted: number; pending: number; rejected: number }
+  > = {};
+
+  const shortNames: Record<string, string> = {
+    'Private Limited Company': 'Pvt Ltd',
+    'LLP Registration': 'LLP',
+    'GST Registration': 'GST',
+    Trademark: 'Trademark',
+    'Startup India Registration': 'Startup India',
+    'ISO Certification': 'ISO',
+    'Annual Compliance': 'Compliance',
+    'General Filing': 'Filing',
+    'FSSAI License': 'FSSAI',
+    'Website Development': 'Website',
+  };
 
   quotations.forEach((q) => {
-    if (!map.has(q.serviceCategory)) {
-      map.set(q.serviceCategory, {
-        service: q.serviceCategory,
-        shortName: q.serviceCategory.length > 12 ? q.serviceCategory.substring(0, 11) + '...' : q.serviceCategory,
-        count: 0,
-        amount: 0,
-        accepted: 0,
-        pending: 0,
-        rejected: 0,
-        conversionRate: 0,
-      });
+    const cat = q.serviceCategory || 'General Filing';
+    if (!catMap[cat]) {
+      catMap[cat] = { count: 0, amount: 0, accepted: 0, pending: 0, rejected: 0 };
     }
-    const item = map.get(q.serviceCategory)!;
-    item.count++;
-    item.amount += q.amount;
-    if (q.status === 'Accepted') item.accepted++;
-    else if (q.status === 'Rejected') item.rejected++;
-    else item.pending++;
+    catMap[cat].count++;
+    catMap[cat].amount += q.finalAmount || q.amount || 0;
+    if (q.status === 'Accepted') catMap[cat].accepted++;
+    else if (q.status === 'Rejected') catMap[cat].rejected++;
+    else catMap[cat].pending++;
   });
 
-  const list = Array.from(map.values()).sort((a, b) => b.count - a.count);
-  list.forEach((item) => {
-    item.conversionRate = item.count > 0 ? Number(((item.accepted / item.count) * 100).toFixed(1)) : 0;
-  });
-
-  return list;
+  return Object.entries(catMap)
+    .map(([category, stats]) => {
+      const rate =
+        stats.count > 0 ? Number(((stats.accepted / stats.count) * 100).toFixed(1)) : 0;
+      return {
+        service: category,
+        category,
+        shortName: shortNames[category] || category.substring(0, 8),
+        count: stats.count,
+        total: stats.count,
+        amount: stats.amount,
+        accepted: stats.accepted,
+        pending: stats.pending,
+        rejected: stats.rejected,
+        conversionRate: rate,
+        acceptanceRate: rate,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
 }
 
 export interface DealServiceStat {
@@ -512,22 +645,19 @@ export interface DealServiceStat {
 }
 
 export function getDealsVsRevenueData(deals: Deal[]): DealServiceStat[] {
-  const map = new Map<string, { count: number; revenue: number }>();
-
+  const map: Record<string, { count: number; revenue: number }> = {};
   deals.forEach((d) => {
-    const cur = map.get(d.serviceCategory) || { count: 0, revenue: 0 };
-    cur.count++;
-    cur.revenue += d.amount;
-    map.set(d.serviceCategory, cur);
+    const s = d.serviceCategory;
+    if (!map[s]) map[s] = { count: 0, revenue: 0 };
+    map[s].count++;
+    map[s].revenue += d.amount;
   });
 
-  return Array.from(map.entries())
-    .map(([service, val]) => ({
-      service: service.length > 12 ? service.substring(0, 11) + '...' : service,
-      dealsCount: val.count,
-      dealRevenue: val.revenue,
-    }))
-    .sort((a, b) => b.dealsCount - a.dealsCount);
+  return Object.entries(map).map(([service, val]) => ({
+    service,
+    dealsCount: val.count,
+    dealRevenue: val.revenue,
+  }));
 }
 
 export interface RevenueCategoryProgress {
@@ -537,24 +667,22 @@ export interface RevenueCategoryProgress {
 }
 
 export function getRevenueCategoryBreakdown(deals: Deal[]): RevenueCategoryProgress[] {
-  const total = deals.reduce((sum, d) => sum + d.amount, 0) || 1;
-  const map = new Map<string, number>();
+  const totalRev = deals.reduce((sum, d) => sum + d.amount, 0);
+  const map: Record<string, number> = {};
 
   deals.forEach((d) => {
-    map.set(d.serviceCategory, (map.get(d.serviceCategory) || 0) + d.amount);
+    map[d.serviceCategory] = (map[d.serviceCategory] || 0) + d.amount;
   });
 
-  return Array.from(map.entries())
-    .map(([cat, rev]) => ({
-      category: cat,
-      revenue: rev,
-      percentage: Number(((rev / total) * 100).toFixed(1)),
-    }))
-    .sort((a, b) => b.revenue - a.revenue);
+  return Object.entries(map).map(([category, rev]) => ({
+    category,
+    revenue: rev,
+    percentage: totalRev > 0 ? Number(((rev / totalRev) * 100).toFixed(1)) : 0,
+  }));
 }
 
 export interface PriorityStat {
-  priority: 'High' | 'Medium' | 'Low';
+  priority: string;
   deals: number;
   revenue: number;
   percentage: number;
@@ -562,38 +690,25 @@ export interface PriorityStat {
 }
 
 export function getPriorityBreakdown(deals: Deal[]): PriorityStat[] {
-  const totalRev = deals.reduce((sum, d) => sum + d.amount, 0) || 1;
-  const high = deals.filter((d) => d.priority === 'High');
-  const med = deals.filter((d) => d.priority === 'Medium');
-  const low = deals.filter((d) => d.priority === 'Low');
+  const totalRev = deals.reduce((sum, d) => sum + d.amount, 0);
+  const priorities = ['High', 'Medium', 'Low'];
+  const colors: Record<string, string> = {
+    High: '#EF4444',
+    Medium: '#F59E0B',
+    Low: '#10B981',
+  };
 
-  const highRev = high.reduce((sum, d) => sum + d.amount, 0);
-  const medRev = med.reduce((sum, d) => sum + d.amount, 0);
-  const lowRev = low.reduce((sum, d) => sum + d.amount, 0);
-
-  return [
-    {
-      priority: 'High',
-      deals: high.length,
-      revenue: highRev,
-      percentage: Number(((highRev / totalRev) * 100).toFixed(1)),
-      color: '#EF4444',
-    },
-    {
-      priority: 'Medium',
-      deals: med.length,
-      revenue: medRev,
-      percentage: Number(((medRev / totalRev) * 100).toFixed(1)),
-      color: '#F59E0B',
-    },
-    {
-      priority: 'Low',
-      deals: low.length,
-      revenue: lowRev,
-      percentage: Number(((lowRev / totalRev) * 100).toFixed(1)),
-      color: '#10B981',
-    },
-  ];
+  return priorities.map((p) => {
+    const pDeals = deals.filter((d) => d.priority === p);
+    const rev = pDeals.reduce((sum, d) => sum + d.amount, 0);
+    return {
+      priority: p,
+      deals: pDeals.length,
+      revenue: rev,
+      percentage: totalRev > 0 ? Math.round((rev / totalRev) * 100) : 0,
+      color: colors[p],
+    };
+  });
 }
 
 export interface DailyRevenuePoint {
@@ -615,12 +730,15 @@ export function getDailyRevenueTrendData(
 
   const curr = new Date(start);
   while (curr <= end) {
-    const dStr = curr.toISOString().split('T')[0];
+    const y = curr.getFullYear();
+    const m = String(curr.getMonth() + 1).padStart(2, '0');
+    const d = String(curr.getDate()).padStart(2, '0');
+    const dStr = `${y}-${m}-${d}`;
     const label = curr.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
     const dayDealsRev = deals
-      .filter((d) => d.createdAt.startsWith(dStr))
-      .reduce((sum, d) => sum + d.amount, 0);
+      .filter((deal) => deal.createdAt.startsWith(dStr))
+      .reduce((sum, deal) => sum + deal.amount, 0);
 
     const dayCollected = payments
       .filter((p) => p.paymentDate.startsWith(dStr) && p.status === 'Paid')
@@ -657,45 +775,53 @@ export function getSalesTeamActivity(
   deals: Deal[],
   payments: Payment[]
 ): SalesMemberStat[] {
-  // Include all reps with sales involvement, including Aazam Afroz
-  const salesUsers = USERS.filter((u) => u.department === 'Sales' || u.id === 'u-6');
+  const salesUsers = USERS.filter((u) => u.department === 'Sales');
 
   return salesUsers.map((u) => {
     const userLeads = leads.filter((l) => l.assignedSalesId === u.id);
-    const qualified = userLeads.filter((l) => l.status === 'Qualified' || l.status === 'Converted').length;
+    const qualified = userLeads.filter(
+      (l) => l.status === 'Qualified' || l.status === 'Converted'
+    ).length;
     const converted = userLeads.filter((l) => l.status === 'Converted').length;
     const userQuotes = quotations.filter((q) => q.assignedSalesId === u.id);
     const userDeals = deals.filter((d) => d.assignedSalesId === u.id);
     const dealValue = userDeals.reduce((sum, d) => sum + d.amount, 0);
-
-    const userRevenue = payments
-      .filter((p) => p.assignedSalesId === u.id && p.status === 'Paid')
-      .reduce((sum, p) => sum + p.amount, 0);
-
-    const conversionRate = userLeads.length > 0 
-      ? Number(((converted / userLeads.length) * 100).toFixed(1))
-      : 0;
+    const userPayments = payments.filter(
+      (p) => p.assignedSalesId === u.id && p.status === 'Paid'
+    );
+    const revenue = userPayments.reduce((sum, p) => sum + p.amount, 0);
 
     return {
-      user: { id: u.id, name: u.name, avatarColor: u.avatarColor, designation: u.designation },
+      user: {
+        id: u.id,
+        name: u.name,
+        avatarColor: u.avatarColor,
+        designation: u.designation,
+      },
       leadsHandled: userLeads.length,
       qualified,
       converted,
-      conversionRate,
+      conversionRate:
+        userLeads.length > 0 ? Number(((converted / userLeads.length) * 100).toFixed(1)) : 0,
       quotations: userQuotes.length,
       deals: userDeals.length,
       dealValue,
-      revenue: userRevenue,
+      revenue,
     };
-  }).sort((a, b) => b.leadsHandled - a.leadsHandled);
+  });
 }
 
 export interface OpsMemberStat {
   user: { id: string; name: string; avatarColor: string; designation?: string };
+  totalOrders: number;
   ordersUpdated: number;
   stagesCompleted: number;
   pendingStages: number;
   overdueOrders: number;
+  completedOrders: number;
+  inProgressOrders: number;
+  completionRate: number;
+  managedValue: number;
 }
 
 export function getOperationsTeamActivity(orders: Order[]): OpsMemberStat[] {
@@ -703,50 +829,74 @@ export function getOperationsTeamActivity(orders: Order[]): OpsMemberStat[] {
 
   return opsUsers.map((u) => {
     const userOrders = orders.filter((o) => o.assignedOpsId === u.id);
-    const completedStages = userOrders.reduce((sum, o) => sum + o.stagesCompleted, 0);
-    const pendingStages = userOrders.reduce((sum, o) => sum + (o.stagesTotal - o.stagesCompleted), 0);
-    const overdue = userOrders.filter((o) => o.isOverdue).length;
+    const totalOrders = userOrders.length;
+    const completedOrders = userOrders.filter((o) => o.status === 'Completed').length;
+    const inProgressOrders = userOrders.filter((o) => o.status === 'In Progress').length;
+    const stagesCompleted = userOrders.reduce((sum, o) => sum + (o.stagesCompleted || 0), 0);
+    const pendingStages = userOrders.reduce(
+      (sum, o) => sum + Math.max(0, (o.stagesTotal || 4) - (o.stagesCompleted || 0)),
+      0
+    );
+    const overdueOrders = userOrders.filter(
+      (o) => o.isOverdue || (o.status === 'Pending' && !o.completedAt)
+    ).length;
+    const managedValue = userOrders.reduce((sum, o) => sum + o.orderValue, 0);
 
     return {
-      user: { id: u.id, name: u.name, avatarColor: u.avatarColor, designation: u.designation },
-      ordersUpdated: userOrders.length,
-      stagesCompleted: completedStages,
+      user: {
+        id: u.id,
+        name: u.name,
+        avatarColor: u.avatarColor,
+        designation: u.designation,
+      },
+      totalOrders,
+      ordersUpdated: totalOrders,
+      stagesCompleted,
       pendingStages,
-      overdueOrders: overdue,
+      overdueOrders,
+      completedOrders,
+      inProgressOrders,
+      completionRate:
+        totalOrders > 0 ? Number(((completedOrders / totalOrders) * 100).toFixed(1)) : 0,
+      managedValue,
     };
-  }).sort((a, b) => b.ordersUpdated - a.ordersUpdated);
+  });
 }
 
 export interface OrderProgressGroup {
   service: string;
+  total: number;
   pending: number;
   inProgress: number;
   completed: number;
   onHold: number;
-  total: number;
 }
 
 export function getOrderProgressData(orders: Order[]): OrderProgressGroup[] {
-  const map = new Map<string, OrderProgressGroup>();
+  const map: Record<
+    string,
+    { pending: number; inProgress: number; completed: number; onHold: number }
+  > = {};
 
   orders.forEach((o) => {
-    if (!map.has(o.serviceCategory)) {
-      map.set(o.serviceCategory, {
-        service: o.serviceCategory,
-        pending: 0,
-        inProgress: 0,
-        completed: 0,
-        onHold: 0,
-        total: 0,
-      });
+    const s = o.serviceCategory || 'General Services';
+    if (!map[s]) {
+      map[s] = { pending: 0, inProgress: 0, completed: 0, onHold: 0 };
     }
-    const group = map.get(o.serviceCategory)!;
-    group.total++;
-    if (o.status === 'Pending') group.pending++;
-    else if (o.status === 'In Progress') group.inProgress++;
-    else if (o.status === 'Completed') group.completed++;
-    else if (o.status === 'On Hold') group.onHold++;
+    if (o.status === 'Completed') map[s].completed++;
+    else if (o.status === 'In Progress') map[s].inProgress++;
+    else if (o.status === 'On Hold') map[s].onHold++;
+    else map[s].pending++;
   });
 
-  return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  return Object.entries(map)
+    .map(([service, counts]) => {
+      const total = counts.pending + counts.inProgress + counts.completed + counts.onHold;
+      return {
+        service,
+        total,
+        ...counts,
+      };
+    })
+    .sort((a, b) => b.total - a.total);
 }

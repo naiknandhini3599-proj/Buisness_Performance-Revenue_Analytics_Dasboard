@@ -143,16 +143,16 @@ export const DashboardLayout: React.FC = () => {
         dateRange: {
           preset: 'today',
           startDate: '2026-10-16',
-          endDate: '2026-10-16',
-          label: 'Today (Oct 16)',
+          endDate: '2026-10-17',
+          label: 'Today (Oct 16-17)',
         },
       });
     } else if (preset === 'last7') {
       updateFilter({
         dateRange: {
           preset: 'last7',
-          startDate: '2026-10-10',
-          endDate: '2026-10-16',
+          startDate: '2026-10-11',
+          endDate: '2026-10-17',
           label: 'Last 7 Days',
         },
       });
@@ -160,8 +160,8 @@ export const DashboardLayout: React.FC = () => {
       updateFilter({
         dateRange: {
           preset: 'last30',
-          startDate: '2026-09-17',
-          endDate: '2026-10-16',
+          startDate: '2026-09-18',
+          endDate: '2026-10-17',
           label: 'Last 30 Days',
         },
       });
@@ -194,7 +194,7 @@ export const DashboardLayout: React.FC = () => {
   const activePayment = payments.find((p) => p.id === selectedPaymentId) || null;
 
   return (
-    <div className="flex min-h-screen bg-[#F4F7FB] text-[#0F172A] antialiased">
+    <div className="flex min-h-screen bg-[#F1F5FB] text-[#172554] antialiased">
       {/* 1. Left Sidebar Navigation */}
       {/* Mobile Backdrop */}
       {sidebarOpen && (
@@ -308,11 +308,11 @@ export const DashboardLayout: React.FC = () => {
       {/* 2. Main Page Layout Container */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {/* Top Header Controls */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#E2E8F0] bg-white px-4 sm:px-6 shadow-xs">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#DCE6F5] bg-white px-4 sm:px-6 shadow-xs">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="rounded-lg p-1.5 text-[#64748B] hover:bg-[#F1F5F9] lg:hidden"
+              className="rounded-lg p-1.5 text-[#64748B] hover:bg-[#F1F5F9] lg:hidden cursor-pointer"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -320,11 +320,11 @@ export const DashboardLayout: React.FC = () => {
             {/* Quick Global Search Bar */}
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] px-3 py-1.5 text-xs text-[#64748B] hover:border-[#94A3B8] transition-colors"
+              className="flex items-center gap-2 rounded-xl border border-[#DCE6F5] bg-[#EAF2FF]/60 px-3.5 py-1.5 text-xs text-[#172554] hover:border-[#2563EB] hover:bg-[#EAF2FF] transition-all cursor-pointer shadow-2xs"
             >
-              <Search className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Search Leads, Quotes, Deals, Orders...</span>
-              <kbd className="hidden rounded bg-white px-1.5 py-0.5 text-[10px] font-semibold text-[#64748B] sm:inline border border-[#E2E8F0]">
+              <Search className="h-3.5 w-3.5 text-[#2563EB]" />
+              <span className="hidden sm:inline font-medium">Search Leads, Quotes, Deals, Orders, Receipts...</span>
+              <kbd className="hidden rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-[#2563EB] sm:inline border border-[#DCE6F5]">
                 ⌘K
               </kbd>
             </button>
@@ -336,9 +336,9 @@ export const DashboardLayout: React.FC = () => {
             <div className="relative" ref={dateRef}>
               <button
                 onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
-                className="flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#0F172A] hover:bg-[#F8FAFC] shadow-xs"
+                className="flex items-center gap-1.5 rounded-lg border border-[#DCE6F5] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#172554] hover:bg-[#F8FAFC] shadow-xs cursor-pointer"
               >
-                <Calendar className="h-3.5 w-3.5 text-[#64748B]" />
+                <Calendar className="h-3.5 w-3.5 text-[#2563EB]" />
                 <span className="hidden sm:inline">{filters.dateRange.label}</span>
                 <ChevronDown className="h-3 w-3 text-[#64748B]" />
               </button>
@@ -400,7 +400,7 @@ export const DashboardLayout: React.FC = () => {
               <select
                 value={filters.userId}
                 onChange={(e) => updateFilter({ userId: e.target.value })}
-                className="appearance-none rounded-lg border border-[#CBD5E1] bg-white pl-3 pr-8 py-1.5 text-xs font-semibold text-[#0F172A] hover:bg-[#F8FAFC] shadow-xs focus:border-[#2563EB] focus:outline-hidden cursor-pointer"
+                className="appearance-none rounded-lg border border-[#DCE6F5] bg-white pl-3 pr-8 py-1.5 text-xs font-semibold text-[#172554] hover:bg-[#F8FAFC] shadow-xs focus:border-[#2563EB] focus:outline-hidden cursor-pointer"
               >
                 <option value="all">All Employees</option>
                 <optgroup label="Sales & Consulting">
@@ -408,6 +408,7 @@ export const DashboardLayout: React.FC = () => {
                   <option value="u-1">Nancy Singh</option>
                   <option value="u-2">Sneha Choudhary</option>
                   <option value="u-3">Tannu Kumari</option>
+                  <option value="u-8">Vikramaditya Rao</option>
                 </optgroup>
                 <optgroup label="Operations & Fulfillment">
                   <option value="u-4">Gaurav Pant</option>
@@ -425,7 +426,7 @@ export const DashboardLayout: React.FC = () => {
               <select
                 value={filters.department}
                 onChange={(e) => updateFilter({ department: e.target.value })}
-                className="appearance-none rounded-lg border border-[#CBD5E1] bg-white pl-3 pr-8 py-1.5 text-xs font-semibold text-[#0F172A] hover:bg-[#F8FAFC] shadow-xs focus:border-[#2563EB] focus:outline-hidden cursor-pointer"
+                className="appearance-none rounded-lg border border-[#DCE6F5] bg-white pl-3 pr-8 py-1.5 text-xs font-semibold text-[#172554] hover:bg-[#F8FAFC] shadow-xs focus:border-[#2563EB] focus:outline-hidden cursor-pointer"
               >
                 <option value="all">All Departments</option>
                 <option value="Sales">Sales</option>
@@ -510,7 +511,7 @@ export const DashboardLayout: React.FC = () => {
         </header>
 
         {/* Dynamic Nested Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-[#F1F5FB] p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

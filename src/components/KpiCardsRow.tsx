@@ -120,14 +120,24 @@ export const KpiCardsRow: React.FC<KpiCardsRowProps> = ({ comparison, onCardClic
     <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
       {cards.map((card) => {
         const IconComponent = card.icon;
+        const isUnqualifiedCard = card.id === 'unqualifiedLeads';
         const isUp = card.diff.isPositive;
-        const diffColor = isUp ? 'text-emerald-600' : 'text-rose-600';
+        const isZero = card.diff.isZero;
+
+        let diffColor = 'text-slate-500';
+        if (!isZero) {
+          if (isUnqualifiedCard) {
+            diffColor = isUp ? 'text-rose-600' : 'text-emerald-600';
+          } else {
+            diffColor = isUp ? 'text-emerald-600' : 'text-rose-600';
+          }
+        }
 
         return (
           <div
             key={card.id}
             onClick={() => onCardClick?.(card.id)}
-            className="group relative flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs transition-all hover:border-[#CBD5E1] hover:shadow-md cursor-pointer"
+            className="group relative flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs transition-all hover:border-[#BFDBFE] hover:shadow-md cursor-pointer"
           >
             {/* Top row: Title and Icon */}
             <div className="flex items-center justify-between gap-1.5">
@@ -141,26 +151,28 @@ export const KpiCardsRow: React.FC<KpiCardsRowProps> = ({ comparison, onCardClic
 
             {/* Middle row: Big Value + optional SubMetric on right */}
             <div className="my-2 flex items-baseline justify-between gap-1">
-              <span className="text-2xl font-bold tracking-tight text-[#0F172A]">
+              <span className="text-2xl font-bold tracking-tight text-[#172554]">
                 {card.value}
               </span>
               {card.subMetric && (
                 <div className="text-right">
-                  <div className="text-xs font-semibold text-[#0F172A]">{card.subMetric}</div>
-                  <div className="text-[10px] text-[#94A3B8]">{card.subLabel}</div>
+                  <div className="text-xs font-semibold text-[#172554]">{card.subMetric}</div>
+                  <div className="text-[10px] text-[#64748B]">{card.subLabel}</div>
                 </div>
               )}
             </div>
 
             {/* Bottom row: Percentage comparison badge */}
             <div className="flex items-center gap-1 text-[11px]">
-              {isUp ? (
+              {isZero ? (
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-300 shrink-0" />
+              ) : isUp ? (
                 <ArrowUpRight className={`h-3 w-3 shrink-0 ${diffColor}`} />
               ) : (
                 <ArrowDownRight className={`h-3 w-3 shrink-0 ${diffColor}`} />
               )}
               <span className={`font-semibold ${diffColor}`}>{card.diff.valueStr}</span>
-              <span className="truncate text-[#94A3B8]">vs. {periodDaysLabel}</span>
+              <span className="truncate text-[#64748B]">{periodDaysLabel}</span>
             </div>
           </div>
         );

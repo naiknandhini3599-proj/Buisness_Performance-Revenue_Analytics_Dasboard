@@ -70,7 +70,7 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-[#2563EB]" />
-          <h2 className="text-sm font-bold text-[#0F172A]">Quotation Analytics</h2>
+          <h2 className="text-sm font-bold text-[#172554]">Quotation Analytics</h2>
         </div>
         <button
           onClick={onOpenQuotationList}
@@ -84,8 +84,8 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
       {/* Grid of 4 cards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         {/* Card 1: Quotations by Service / Order Category */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
-          <div className="text-xs font-bold text-[#0F172A]">
+        <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
+          <div className="text-xs font-bold text-[#172554]">
             Quotations by Service / Order Category
           </div>
 
@@ -133,8 +133,8 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
         </div>
 
         {/* Card 2: Quotation Value by Service */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
-          <div className="text-xs font-bold text-[#0F172A]">
+        <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
+          <div className="text-xs font-bold text-[#172554]">
             Quotation Value by Service
           </div>
 
@@ -158,7 +158,7 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 text-right">
-                    <span className="text-xs font-semibold text-[#0F172A]">
+                    <span className="text-xs font-semibold text-[#172554]">
                       {formatINR(item.value)}
                     </span>
                     <span className="text-[10px] text-[#64748B]">({item.pct}%)</span>
@@ -174,9 +174,9 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
         </div>
 
         {/* Card 3: Service Wise Quotation Details Table */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+        <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-[#0F172A]">
+            <div className="text-xs font-bold text-[#172554]">
               Service Wise Quotation Details
             </div>
             <div className="relative">
@@ -192,17 +192,17 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
 
           <div className="my-2 max-h-48 overflow-y-auto">
             <table className="w-full text-left text-[11px]">
-              <thead className="sticky top-0 bg-white border-b border-[#E2E8F0] text-[10px] font-semibold text-[#64748B]">
+              <thead className="sticky top-0 bg-white border-b border-[#DCE6F5] text-[10px] font-semibold text-[#64748B]">
                 <tr>
                   <th className="pb-1">Service / Order</th>
                   <th
-                    className="pb-1 text-right cursor-pointer hover:text-[#0F172A]"
+                    className="pb-1 text-right cursor-pointer hover:text-[#172554]"
                     onClick={() => handleSort('count')}
                   >
                     Quotes
                   </th>
                   <th
-                    className="pb-1 text-right cursor-pointer hover:text-[#0F172A]"
+                    className="pb-1 text-right cursor-pointer hover:text-[#172554]"
                     onClick={() => handleSort('amount')}
                   >
                     Amount
@@ -211,7 +211,7 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
                   <th className="pb-1 text-right">Pending</th>
                   <th className="pb-1 text-right">Rejected</th>
                   <th
-                    className="pb-1 text-right cursor-pointer hover:text-[#0F172A]"
+                    className="pb-1 text-right cursor-pointer hover:text-[#172554]"
                     onClick={() => handleSort('conversionRate')}
                   >
                     Conv. Rate
@@ -228,7 +228,7 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
                     <td className="py-1.5 font-medium text-[#1E293B] truncate max-w-[100px]" title={row.service}>
                       {row.service}
                     </td>
-                    <td className="py-1.5 text-right font-semibold text-[#0F172A]">
+                    <td className="py-1.5 text-right font-semibold text-[#172554]">
                       {row.count}
                     </td>
                     <td className="py-1.5 text-right font-medium text-[#475569]">
@@ -243,7 +243,7 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
                     <td className="py-1.5 text-right text-rose-500 font-medium">
                       {row.rejected}
                     </td>
-                    <td className="py-1.5 text-right font-semibold text-[#0F172A]">
+                    <td className="py-1.5 text-right font-semibold text-[#172554]">
                       {row.conversionRate}%
                     </td>
                   </tr>
@@ -258,9 +258,9 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
         </div>
 
         {/* Card 4: Quote to Deal Conversion Rate Radial Gauge */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+        <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-[#0F172A]">
+            <div className="text-xs font-bold text-[#172554]">
               Quote to Deal Conversion Rate
             </div>
             <div className="group relative">
@@ -298,7 +298,7 @@ export const QuotationAnalyticsSection: React.FC<QuotationAnalyticsProps> = ({
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center">
-                <span className="text-xl font-bold tracking-tight text-[#0F172A]">
+                <span className="text-xl font-bold tracking-tight text-[#172554]">
                   {quoteToDealRate.toFixed(1)}%
                 </span>
               </div>

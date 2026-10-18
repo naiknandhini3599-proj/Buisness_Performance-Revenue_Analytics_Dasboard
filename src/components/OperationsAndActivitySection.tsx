@@ -29,9 +29,9 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
       {/* 1. Sales Team Activity Table */}
-      <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+      <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-[#0F172A]">Sales Team Activity</div>
+          <div className="text-xs font-bold text-[#172554]">Sales Team Activity</div>
           <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-[#2563EB]">
             Sales Team
           </span>
@@ -39,7 +39,7 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
 
         <div className="my-2 max-h-56 overflow-x-auto overflow-y-auto">
           <table className="w-full text-left text-[11px]">
-            <thead className="sticky top-0 bg-white border-b border-[#E2E8F0] text-[10px] font-semibold text-[#64748B]">
+            <thead className="sticky top-0 bg-white border-b border-[#DCE6F5] text-[10px] font-semibold text-[#64748B]">
               <tr>
                 <th className="pb-1.5">User</th>
                 <th className="pb-1.5 text-center">Leads</th>
@@ -84,7 +84,7 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
                     <td className="py-2 text-center text-amber-600 font-medium">
                       {member.converted}
                     </td>
-                    <td className="py-2 text-center font-semibold text-[#0F172A]">
+                    <td className="py-2 text-center font-semibold text-[#172554]">
                       {member.conversionRate}%
                     </td>
                     <td className="py-2 text-center text-[#475569]">{member.quotations}</td>
@@ -92,7 +92,7 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
                     <td className="py-2 text-right font-medium text-[#475569]">
                       {formatINR(member.dealValue)}
                     </td>
-                    <td className="py-2 text-right font-bold text-[#0F172A]">
+                    <td className="py-2 text-right font-bold text-[#172554]">
                       {formatINR(member.revenue)}
                     </td>
                   </tr>
@@ -108,9 +108,9 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
       </div>
 
       {/* 2. Operations Team Activity Table */}
-      <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+      <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-[#0F172A]">Operations Team Activity</div>
+          <div className="text-xs font-bold text-[#172554]">Operations Team Activity</div>
           <span className="rounded bg-purple-50 px-1.5 py-0.5 text-[10px] font-semibold text-[#8B5CF6]">
             Operations
           </span>
@@ -118,7 +118,7 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
 
         <div className="my-2 max-h-56 overflow-x-auto overflow-y-auto">
           <table className="w-full text-left text-[11px]">
-            <thead className="sticky top-0 bg-white border-b border-[#E2E8F0] text-[10px] font-semibold text-[#64748B]">
+            <thead className="sticky top-0 bg-white border-b border-[#DCE6F5] text-[10px] font-semibold text-[#64748B]">
               <tr>
                 <th className="pb-1.5">User</th>
                 <th className="pb-1.5 text-center">Orders Updated</th>
@@ -152,7 +152,7 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
                         </span>
                       </div>
                     </td>
-                    <td className="py-2 text-center font-semibold text-[#0F172A]">
+                    <td className="py-2 text-center font-semibold text-[#172554]">
                       {member.ordersUpdated}
                     </td>
                     <td className="py-2 text-center text-emerald-600 font-medium">
@@ -177,9 +177,9 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
       </div>
 
       {/* 3. Orders & Stage Progress */}
-      <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+      <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-[#0F172A]">Orders & Stage Progress</div>
+          <div className="text-xs font-bold text-[#172554]">Orders & Stage Progress</div>
           <div className="flex items-center gap-2 text-[9px]">
             <span className="flex items-center gap-1 text-[#F59E0B]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" /> Pending
@@ -220,7 +220,7 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
                     <span className="text-[#06B6D4]">{group.inProgress}</span>
                     <span className="text-[#10B981]">{group.completed}</span>
                     <span className="text-[#EF4444]">{group.onHold}</span>
-                    <span className="ml-1 text-[#0F172A] font-bold">{group.total}</span>
+                    <span className="ml-1 text-[#172554] font-bold">{group.total}</span>
                   </div>
                 </div>
 
@@ -266,15 +266,15 @@ export const OperationsAndActivitySection: React.FC<OperationsAndActivityProps> 
       </div>
 
       {/* 4. Recent CRM Activity Feed */}
-      <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+      <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-[#0F172A]">Recent CRM Activity</div>
+          <div className="text-xs font-bold text-[#172554]">Recent CRM Activity</div>
           <span className="text-[10px] text-[#64748B]">Real-time events</span>
         </div>
 
         <div className="my-2 max-h-56 overflow-y-auto">
           <table className="w-full text-left text-[10px]">
-            <thead className="sticky top-0 bg-white border-b border-[#E2E8F0] text-[9px] font-semibold text-[#64748B]">
+            <thead className="sticky top-0 bg-white border-b border-[#DCE6F5] text-[9px] font-semibold text-[#64748B]">
               <tr>
                 <th className="pb-1">Time</th>
                 <th className="pb-1">Employee</th>

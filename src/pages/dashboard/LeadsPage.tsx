@@ -79,7 +79,7 @@ export const LeadsPage: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[#0F172A] sm:text-2xl">
+          <h1 className="text-xl font-bold tracking-tight text-[#172554] sm:text-2xl">
             Lead Analytics & Inbound Pipeline
           </h1>
           <p className="mt-1 text-xs text-[#64748B]">
@@ -97,16 +97,16 @@ export const LeadsPage: React.FC = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#64748B]">
             <span className="font-semibold">Total Leads</span>
             <Users className="h-4 w-4 text-blue-600" />
           </div>
-          <div className="mt-2 text-2xl font-bold text-[#0F172A]">{leads.length}</div>
+          <div className="mt-2 text-2xl font-bold text-[#172554]">{leads.length}</div>
           <div className="text-[10px] text-emerald-600 font-semibold">{comparison.newLeadsDiff.valueStr} vs previous</div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#64748B]">
             <span className="font-semibold">Qualified</span>
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -117,7 +117,7 @@ export const LeadsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#64748B]">
             <span className="font-semibold">Converted</span>
             <Target className="h-4 w-4 text-amber-600" />
@@ -126,7 +126,7 @@ export const LeadsPage: React.FC = () => {
           <div className="text-[10px] text-amber-600 font-semibold">Won accounts</div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#64748B]">
             <span className="font-semibold">Unqualified</span>
             <XCircle className="h-4 w-4 text-rose-600" />
@@ -137,7 +137,7 @@ export const LeadsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#64748B]">
             <span className="font-semibold">Conversion Rate</span>
             <TrendingUp className="h-4 w-4 text-cyan-600" />
@@ -150,9 +150,9 @@ export const LeadsPage: React.FC = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Daily Velocity Line Chart */}
-        <div className="lg:col-span-8 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+        <div className="lg:col-span-8 rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-[#0F172A]">Daily Inbound Lead Velocity</span>
+            <span className="text-xs font-bold text-[#172554]">Daily Inbound Lead Velocity</span>
             <div className="flex items-center gap-3 text-[10px]">
               <span className="flex items-center gap-1 text-[#2563EB] font-semibold">
                 <span className="h-2 w-2 rounded-full bg-[#2563EB]" /> New Leads
@@ -178,8 +178,8 @@ export const LeadsPage: React.FC = () => {
         </div>
 
         {/* Lead Sources Donut */}
-        <div className="lg:col-span-4 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs flex flex-col justify-between">
-          <span className="text-xs font-bold text-[#0F172A]">Lead Acquisition Sources</span>
+        <div className="lg:col-span-4 rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-bold text-[#172554]">Lead Acquisition Sources</span>
           <div className="my-auto h-40">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -212,9 +212,9 @@ export const LeadsPage: React.FC = () => {
       </div>
 
       {/* Interactive Leads Table */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs overflow-hidden">
+      <div className="rounded-xl border border-[#DCE6F5] bg-white shadow-xs overflow-hidden">
         {/* Table Filter Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] p-4 bg-[#F8FAFC]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DCE6F5] p-4 bg-[#F8FAFC]">
           <div className="flex items-center gap-2">
             <div className="relative w-64">
               <Search className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-[#94A3B8]" />
@@ -223,14 +223,14 @@ export const LeadsPage: React.FC = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search leads by name, company, email..."
-                className="w-full rounded-lg border border-[#CBD5E1] bg-white pl-8 pr-3 py-1.5 text-xs text-[#0F172A] focus:border-[#2563EB] focus:outline-hidden"
+                className="w-full rounded-lg border border-[#CBD5E1] bg-white pl-8 pr-3 py-1.5 text-xs text-[#172554] focus:border-[#2563EB] focus:outline-hidden"
               />
             </div>
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs font-medium text-[#0F172A]"
+              className="rounded-lg border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs font-medium text-[#172554]"
             >
               <option value="ALL">All Statuses</option>
               <option value="New">New</option>
@@ -242,7 +242,7 @@ export const LeadsPage: React.FC = () => {
             <select
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
-              className="rounded-lg border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs font-medium text-[#0F172A]"
+              className="rounded-lg border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs font-medium text-[#172554]"
             >
               <option value="ALL">All Sources</option>
               <option value="Google Ads">Google Ads</option>
@@ -259,7 +259,7 @@ export const LeadsPage: React.FC = () => {
         {/* Table Content */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+            <thead className="bg-[#F8FAFC] border-b border-[#DCE6F5] text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
               <tr>
                 <th className="px-4 py-3">Lead ID</th>
                 <th className="px-4 py-3">Company & Contact</th>
@@ -281,7 +281,7 @@ export const LeadsPage: React.FC = () => {
                     #{lead.id}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="font-semibold text-[#0F172A]">{lead.companyName}</div>
+                    <div className="font-semibold text-[#172554]">{lead.companyName}</div>
                     <div className="text-[11px] text-[#64748B]">{lead.name} • {lead.city}</div>
                   </td>
                   <td className="px-4 py-3 font-medium text-[#334155]">
@@ -292,14 +292,14 @@ export const LeadsPage: React.FC = () => {
                       {lead.source}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-medium text-[#0F172A]">
+                  <td className="px-4 py-3 font-medium text-[#172554]">
                     {lead.assignedSalesName}
                   </td>
                   <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                     <select
                       value={lead.status}
                       onChange={(e) => updateLeadStatus(lead.id, e.target.value as any)}
-                      className="rounded-lg border border-[#CBD5E1] bg-white px-2 py-1 text-[10px] font-bold text-[#0F172A] focus:outline-hidden"
+                      className="rounded-lg border border-[#CBD5E1] bg-white px-2 py-1 text-[10px] font-bold text-[#172554] focus:outline-hidden"
                     >
                       <option value="New">New</option>
                       <option value="Qualified">Qualified</option>

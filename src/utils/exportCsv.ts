@@ -4,6 +4,7 @@ import {
   Deal,
   Order,
   Payment,
+  Invoice,
   PeriodKpiData,
 } from '../types';
 
@@ -146,4 +147,36 @@ export function exportPaymentsToCsv(payments: Payment[]) {
 
   const csv = [headers.map(escapeCsv).join(','), ...rows.map((r) => r.map(escapeCsv).join(','))].join('\n');
   downloadCsv(csv, `Payments_Report_${Date.now()}.csv`);
+}
+
+export function exportInvoicesToCsv(invoices: Invoice[]) {
+  const headers = [
+    'Invoice ID',
+    'Customer Name',
+    'Deal ID',
+    'Order ID',
+    'Invoice Amount (INR)',
+    'Paid Amount (INR)',
+    'Balance Amount (INR)',
+    'Status',
+    'Issue Date',
+    'Due Date',
+    'Finance Controller',
+  ];
+  const rows = invoices.map((i) => [
+    i.id,
+    i.customerName,
+    i.dealId,
+    i.orderId || 'N/A',
+    i.invoiceAmount,
+    i.paidAmount,
+    i.balanceAmount,
+    i.status,
+    i.issueDate,
+    i.dueDate,
+    i.assignedFinanceName || 'Rajesh Verma',
+  ]);
+
+  const csv = [headers.map(escapeCsv).join(','), ...rows.map((r) => r.map(escapeCsv).join(','))].join('\n');
+  downloadCsv(csv, `Tax_Invoices_Report_${Date.now()}.csv`);
 }

@@ -62,7 +62,7 @@ export const QuotationsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[#0F172A] sm:text-2xl">
+          <h1 className="text-xl font-bold tracking-tight text-[#172554] sm:text-2xl">
             Quotation Intelligence & Proposal Analytics
           </h1>
           <p className="mt-1 text-xs text-[#64748B]">
@@ -80,37 +80,37 @@ export const QuotationsPage: React.FC = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <span className="text-[10px] font-semibold text-[#64748B]">Total Quotations</span>
-          <div className="mt-1 text-2xl font-bold text-[#0F172A]">{quotations.length}</div>
+          <div className="mt-1 text-2xl font-bold text-[#172554]">{quotations.length}</div>
           <div className="text-[10px] text-blue-600 font-semibold">Commercial Proposals</div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <span className="text-[10px] font-semibold text-[#64748B]">Quoted Value</span>
           <div className="mt-1 text-xl font-bold text-[#1E3A8A]">{formatINR(totalValue)}</div>
           <div className="text-[10px] text-[#64748B]">Gross pipeline value</div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <span className="text-[10px] font-semibold text-[#64748B]">Accepted</span>
           <div className="mt-1 text-2xl font-bold text-emerald-700">{acceptedCount}</div>
           <div className="text-[10px] text-emerald-600 font-semibold">Converted to Deals</div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <span className="text-[10px] font-semibold text-[#64748B]">Pending</span>
           <div className="mt-1 text-2xl font-bold text-amber-700">{pendingCount}</div>
           <div className="text-[10px] text-amber-600 font-semibold">Under negotiation</div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <span className="text-[10px] font-semibold text-[#64748B]">Rejected</span>
           <div className="mt-1 text-2xl font-bold text-rose-700">{rejectedCount}</div>
           <div className="text-[10px] text-rose-600 font-semibold">Declined / Expired</div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 shadow-xs">
+        <div className="rounded-xl border border-[#DCE6F5] bg-white p-3.5 shadow-xs">
           <span className="text-[10px] font-semibold text-[#64748B]">Conversion Rate</span>
           <div className="mt-1 text-2xl font-bold text-cyan-700">{convRate}%</div>
           <div className="text-[10px] text-cyan-600 font-semibold">Won / Issued</div>
@@ -120,9 +120,9 @@ export const QuotationsPage: React.FC = () => {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Category Breakdown Chart */}
-        <div className="lg:col-span-8 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+        <div className="lg:col-span-8 rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-[#0F172A]">Quotations by Service Line</span>
+            <span className="text-xs font-bold text-[#172554]">Quotations by Service Line</span>
             <span className="text-[10px] text-[#64748B]">Volume Distribution</span>
           </div>
           <div className="h-52 w-full">
@@ -141,9 +141,9 @@ export const QuotationsPage: React.FC = () => {
         </div>
 
         {/* Circular Gauge */}
-        <div className="lg:col-span-4 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs flex flex-col justify-between items-center text-center">
+        <div className="lg:col-span-4 rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs flex flex-col justify-between items-center text-center">
           <div className="w-full flex items-center justify-between">
-            <span className="text-xs font-bold text-[#0F172A]">Quote-to-Deal Conversion</span>
+            <span className="text-xs font-bold text-[#172554]">Quote-to-Deal Conversion</span>
             <Info className="h-3.5 w-3.5 text-[#94A3B8]" />
           </div>
 
@@ -163,20 +163,20 @@ export const QuotationsPage: React.FC = () => {
               />
             </svg>
             <div className="absolute flex flex-col items-center">
-              <span className="text-2xl font-black text-[#0F172A]">{convRate}%</span>
+              <span className="text-2xl font-black text-[#172554]">{convRate}%</span>
               <span className="text-[9px] uppercase tracking-wider text-[#64748B]">Win Ratio</span>
             </div>
           </div>
 
-          <div className="text-xs font-semibold text-[#0F172A]">
+          <div className="text-xs font-semibold text-[#172554]">
             {acceptedCount} Won Deals / {quotations.length} Quotations
           </div>
         </div>
       </div>
 
       {/* Quotations Table */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] p-4 bg-[#F8FAFC]">
+      <div className="rounded-xl border border-[#DCE6F5] bg-white shadow-xs overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DCE6F5] p-4 bg-[#F8FAFC]">
           <div className="flex items-center gap-2">
             <div className="relative w-64">
               <Search className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-[#94A3B8]" />
@@ -185,14 +185,14 @@ export const QuotationsPage: React.FC = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search quotes by ID, service, rep..."
-                className="w-full rounded-lg border border-[#CBD5E1] bg-white pl-8 pr-3 py-1.5 text-xs text-[#0F172A] focus:border-[#2563EB] focus:outline-hidden"
+                className="w-full rounded-lg border border-[#CBD5E1] bg-white pl-8 pr-3 py-1.5 text-xs text-[#172554] focus:border-[#2563EB] focus:outline-hidden"
               />
             </div>
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs font-medium text-[#0F172A]"
+              className="rounded-lg border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs font-medium text-[#172554]"
             >
               <option value="ALL">All Statuses</option>
               <option value="Accepted">Accepted</option>
@@ -208,7 +208,7 @@ export const QuotationsPage: React.FC = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+            <thead className="bg-[#F8FAFC] border-b border-[#DCE6F5] text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
               <tr>
                 <th className="px-4 py-3">Quote ID</th>
                 <th className="px-4 py-3">Service Category</th>
@@ -230,7 +230,7 @@ export const QuotationsPage: React.FC = () => {
                   <td className="px-4 py-3 font-bold text-[#2563EB]">
                     #{q.id}
                   </td>
-                  <td className="px-4 py-3 font-semibold text-[#0F172A]">
+                  <td className="px-4 py-3 font-semibold text-[#172554]">
                     {q.serviceCategory}
                   </td>
                   <td
@@ -248,7 +248,7 @@ export const QuotationsPage: React.FC = () => {
                   <td className="px-4 py-3 text-right font-medium text-[#475569]">
                     {formatINR(q.amount)}
                   </td>
-                  <td className="px-4 py-3 text-right font-bold text-[#0F172A]">
+                  <td className="px-4 py-3 text-right font-bold text-[#172554]">
                     {formatINR(q.finalAmount)}
                   </td>
                   <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>

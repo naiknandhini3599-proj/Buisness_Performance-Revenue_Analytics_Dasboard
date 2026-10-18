@@ -41,7 +41,7 @@ export const DealsRevenueSection: React.FC<DealsRevenueSectionProps> = ({
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-[#2563EB]" />
-          <h2 className="text-sm font-bold text-[#0F172A]">Deals & Revenue</h2>
+          <h2 className="text-sm font-bold text-[#172554]">Deals & Revenue</h2>
         </div>
         <button
           onClick={() => onDrillDown('deals')}
@@ -55,9 +55,9 @@ export const DealsRevenueSection: React.FC<DealsRevenueSectionProps> = ({
       {/* Grid of 5 cards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
         {/* Card 1: Deals Created vs Deal Revenue (by Service) */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+        <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-[#0F172A] leading-tight">
+            <div className="text-xs font-bold text-[#172554] leading-tight">
               Deals Created vs Deal Revenue (by Service)
             </div>
             <div className="flex flex-col items-end text-[9px] text-[#64748B]">
@@ -121,8 +121,8 @@ export const DealsRevenueSection: React.FC<DealsRevenueSectionProps> = ({
         </div>
 
         {/* Card 2: Revenue by Order / Service Category */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
-          <div className="text-xs font-bold text-[#0F172A]">
+        <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
+          <div className="text-xs font-bold text-[#172554]">
             Revenue by Order / Service Category
           </div>
 
@@ -138,7 +138,7 @@ export const DealsRevenueSection: React.FC<DealsRevenueSectionProps> = ({
                     {item.category}
                   </span>
                   <div className="flex items-center gap-1">
-                    <span className="font-semibold text-[#0F172A]">
+                    <span className="font-semibold text-[#172554]">
                       {formatCompactINR(item.revenue)}
                     </span>
                     <span className="text-[10px] text-[#64748B]">({item.percentage}%)</span>
@@ -160,12 +160,12 @@ export const DealsRevenueSection: React.FC<DealsRevenueSectionProps> = ({
         </div>
 
         {/* Card 3: Priority Breakdown */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
-          <div className="text-xs font-bold text-[#0F172A]">Priority Breakdown</div>
+        <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
+          <div className="text-xs font-bold text-[#172554]">Priority Breakdown</div>
 
           <div className="my-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-[#E2E8F0] text-[10px] font-semibold text-[#64748B]">
+              <thead className="border-b border-[#DCE6F5] text-[10px] font-semibold text-[#64748B]">
                 <tr>
                   <th className="pb-1.5">Priority</th>
                   <th className="pb-1.5 text-right">Deals</th>
@@ -189,13 +189,13 @@ export const DealsRevenueSection: React.FC<DealsRevenueSectionProps> = ({
                         <span>{row.priority}</span>
                       </div>
                     </td>
-                    <td className="py-2.5 text-right font-semibold text-[#0F172A]">
+                    <td className="py-2.5 text-right font-semibold text-[#172554]">
                       {row.deals}
                     </td>
                     <td className="py-2.5 text-right font-medium text-[#475569]">
                       {formatINR(row.revenue)}
                     </td>
-                    <td className="py-2.5 text-right font-bold text-[#0F172A]">
+                    <td className="py-2.5 text-right font-bold text-[#172554]">
                       {row.percentage}%
                     </td>
                   </tr>
@@ -210,9 +210,9 @@ export const DealsRevenueSection: React.FC<DealsRevenueSectionProps> = ({
         </div>
 
         {/* Card 4: Daily Revenue Trend */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+        <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-[#0F172A]">Daily Revenue Trend</div>
+            <div className="text-xs font-bold text-[#172554]">Daily Revenue Trend</div>
             <div className="flex items-center gap-2 text-[9px]">
               <span className="flex items-center gap-1 font-medium text-[#2563EB]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" /> Revenue
@@ -264,8 +264,8 @@ export const DealsRevenueSection: React.FC<DealsRevenueSectionProps> = ({
         </div>
 
         {/* Card 5: Total vs Collected Revenue Summary */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
-          <div className="text-xs font-bold text-[#0F172A]">
+        <div className="flex flex-col justify-between rounded-xl border border-[#DCE6F5] bg-white p-4 shadow-xs">
+          <div className="text-xs font-bold text-[#172554]">
             Total vs Collected Revenue
           </div>
 
