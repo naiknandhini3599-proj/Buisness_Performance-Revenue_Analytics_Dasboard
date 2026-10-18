@@ -493,6 +493,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const advanceOrderStage = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id === orderId) {
+          const nextStages = Math.min(o.stagesTotal, o.stagesCompleted + 1);
+          const nextStatus: Order['status'] = nextStages >= o.stagesTotal ? 'Completed' : 'In Progress';
+          return {
+            ...o,
+            stagesCompleted: nextStages,
+            status: nextStatus,
+          };
+        }
+        return o;
+      })
+    );
+    const order = orders.find((o) => o.id === orderId);
+    if (order) {
+      const nextStages = Math.min(order.stagesTotal, order.stagesCompleted + 1);
+      const newAct: ActivityLog = {
+        id: `act-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        employeeId: authUser?.id || order.assignedOpsId || 'u-1',
+        employeeName: authUser?.name || order.assignedOpsName || 'Operations Specialist',
+        action: 'Order Stage Advanced',
+        recordType: 'Order',
+        recordId: orderId,
+        details: `Advanced order #${orderId} stage to ${nextStages}/${order.stagesTotal}.`,
+      };
+      setActivities((prev) => [newAct, ...prev]);
+    }
+  };
+
+  const quickAcceptQuotation = (quoteId: string) => {
+    setQuotations((prev) =>
+      prev.map((q) => (q.id === quoteId ? { ...q, status: 'Accepted' } : q))
+    );
+    const quote = quotations.find((q) => q.id === quoteId);
+    if (quote) {
+      setLeads((prev) =>
+        prev.map((l) => (l.id === quote.leadId ? { ...l, status: 'Converted' } : l))
+      );
+      const newAct: ActivityLog = {
+        id: `act-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        employeeId: authUser?.id || 'u-6',
+        employeeName: authUser?.name || quote.assignedSalesName || 'Aazam Afroz',
+        action: 'Quotation Accepted',
+        recordType: 'Quotation',
+        recordId: quoteId,
+        details: `Commercial quotation #${quoteId} accepted for ₹${quote.finalAmount.toLocaleString('en-IN')}.`,
+      };
+      setActivities((prev) => [newAct, ...prev]);
+    }
+  };
+
   // 1. Filtered Records for Current Period
   const currentFiltered = useMemo(() => {
     return filterRecords(leads, quotations, deals, orders, invoices, payments, activities, filters);
